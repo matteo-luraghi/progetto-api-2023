@@ -30,8 +30,7 @@ void stampa_albero(albero_macchine_t T) {
 }
 
 void left_rotate(albero_macchine_t T, macchina_t* x) {
-    macchina_t* y = malloc(sizeof(macchina_t));
-    y = x->right;
+    macchina_t* y = x->right;
     x->right = y->left;
     if(y->left != NULL) {
         y->left->p = x;
@@ -49,12 +48,10 @@ void left_rotate(albero_macchine_t T, macchina_t* x) {
     }
     y->left = x;
     x->p = y;
-    free(y);
 }
 
 void right_rotate(albero_macchine_t T, macchina_t* x) {
-    macchina_t* y = malloc(sizeof(macchina_t));
-    y = x->left;
+    macchina_t* y = x->left;
     x->left = y->right;
     if(y->right != NULL) {
         y->right->p = x;
@@ -72,12 +69,12 @@ void right_rotate(albero_macchine_t T, macchina_t* x) {
     }
     y->right = x;
     x->p= y;
-    free(y);
 }
 
 void rb_insert_fixup(albero_macchine_t T, macchina_t* z) {
-    macchina_t* y = malloc(sizeof(macchina_t));
-    macchina_t* x = malloc(sizeof(macchina_t));
+    macchina_t* y;
+    macchina_t* x;
+
     if(z == T) {
         T->colore = 'B';
     }
@@ -128,15 +125,11 @@ void rb_insert_fixup(albero_macchine_t T, macchina_t* z) {
             }
         }
     }
-    free(y);
-    free(x);
 }
 
 albero_macchine_t rb_insert(albero_macchine_t T, macchina_t* z) {
-    macchina_t* y = malloc(sizeof(macchina_t));
-    macchina_t* x = malloc(sizeof(macchina_t));
-    y = NULL;
-    x = T;
+    macchina_t* y = NULL;
+    macchina_t* x = T;
     while(x != NULL) {
         y = x;
         if(z->autonomia < x->autonomia) {
@@ -160,8 +153,6 @@ albero_macchine_t rb_insert(albero_macchine_t T, macchina_t* z) {
     z->right = NULL;
     z->colore = 'R';
     rb_insert_fixup(T, z);
-    free(y);
-    free(x);
     return T;
 }
 
