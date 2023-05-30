@@ -5,21 +5,11 @@ typedef struct nodo_rb {
     struct nodo_rb *right;
     struct nodo_rb *left;
     struct nodo_rb *p;
-    char colore;
+    char color;
     int autonomia;
 } macchina_t;
 
 typedef struct nodo_rb* albero_macchine_t;
-
-macchina_t* crea_nodo(int autonomia) {
-    macchina_t* x = malloc(sizeof(macchina_t));
-    x->autonomia = autonomia;
-    x->p = NULL;
-    x->left = NULL;
-    x->right = NULL;
-    x->colore = 'R';
-    return x;
-}
 
 void stampa_albero(albero_macchine_t T) {
     if (T != NULL) {
@@ -76,17 +66,17 @@ void rb_insert_fixup(albero_macchine_t T, macchina_t* z) {
     macchina_t* x;
 
     if(z == T) {
-        T->colore = 'B';
+        T->color = 'B';
     }
     else {
         x = z->p;
-        if(x->colore == 'R') {
+        if(x->color == 'R') {
             if(x == x->p->left) {       
                 y = x->p->right;
-                if(y->colore == 'R') {       
-                    x->colore = 'B';
-                    y->colore = 'B';
-                    x->p->colore = 'R';
+                if(y->color == 'R') {       
+                    x->color = 'B';
+                    y->color = 'B';
+                    x->p->color = 'R';
                     rb_insert_fixup(T, x->p);
                 }
                 else if(z == x->right){
@@ -98,9 +88,9 @@ void rb_insert_fixup(albero_macchine_t T, macchina_t* z) {
                     x = z->p;
                 }
                 
-                x->colore = 'B';
+                x->color = 'B';
                 
-                x->p->colore = 'R';
+                x->p->color = 'R';
                 
                 right_rotate(T, x->p);
             }
@@ -108,10 +98,10 @@ void rb_insert_fixup(albero_macchine_t T, macchina_t* z) {
         else {
             if(x == x->p->right) {        
                 y = x->p->left;
-                if(y->colore == 'R') {
-                    x->colore = 'B';
-                    y->colore = 'B';
-                    x->p->colore = 'R';
+                if(y->color == 'R') {
+                    x->color = 'B';
+                    y->color = 'B';
+                    x->p->color = 'R';
                     rb_insert_fixup(T, x->p);
                 }
                 else if(z == x->left){
@@ -119,15 +109,22 @@ void rb_insert_fixup(albero_macchine_t T, macchina_t* z) {
                     right_rotate(T, z);
                     x = z->p;
                 }
-                x->colore = 'B';
-                x->p->colore = 'R';
+                x->color = 'B';
+                x->p->color = 'R';
                 left_rotate(T, x->p);
             }
         }
     }
 }
 
-albero_macchine_t rb_insert(albero_macchine_t T, macchina_t* z) {
+albero_macchine_t rb_insert(albero_macchine_t T, int autonomia) {
+    macchina_t* z = malloc(sizeof(macchina_t));
+    z->autonomia = autonomia;
+    z->left = NULL;
+    z->right = NULL;
+    z->p = NULL;
+    z->color = 'R';
+
     macchina_t* y = NULL;
     macchina_t* x = T;
     while(x != NULL) {
@@ -151,7 +148,7 @@ albero_macchine_t rb_insert(albero_macchine_t T, macchina_t* z) {
     }
     z->left = NULL;
     z->right = NULL;
-    z->colore = 'R';
+    z->color = 'R';
     rb_insert_fixup(T, z);
     return T;
 }
@@ -165,9 +162,7 @@ int main() {
     do {
         printf("Inserisci autonomia: ");
         scanf("%d", &autonomia);
-        macchina_t* x;
-        x = crea_nodo(autonomia);
-        T = rb_insert(T, x);
+        T = rb_insert(T, autonomia);
         stampa_albero(T);
     } while(autonomia != 0);
     
