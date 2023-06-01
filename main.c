@@ -3,14 +3,14 @@
 #define COMMAND_LENGTH 1024
 //----------------------------------------------------
 // BST DATA STRUCTURE AND FUNCTIONS
-typedef struct nodo_rb {
-    struct nodo_rb *right;
-    struct nodo_rb *left;
-    struct nodo_rb *p;
+typedef struct nodo {
+    struct nodo *right;
+    struct nodo *left;
+    struct nodo *p;
     int autonomia;
 } macchina_t;
 
-typedef struct albero_rb {
+typedef struct albero {
     macchina_t* root;
     int max;
 } albero_t;
@@ -112,12 +112,6 @@ void tree_delete(albero_t* T, macchina_t* z) {
 }
 //----------------------------------------------------
 
-typedef struct command_data{
-    int stazione;
-    int data_num;
-    int data[data_num];
-} command_data;
-
 int string_compare(char a[], char b[], int len) {
     int i;
     for(i=0; i<len; i++) {
@@ -136,6 +130,90 @@ int string_len(char a[]) {
     return i+1;
 }
 
+//temp data structure, the data will go directly in the graph
+typedef struct command_data{
+    int station_distance;
+    int data_num;
+    int data[512];
+    char valid;
+} command_data_t;
+
+command_data_t parse_command(char command_text[], char command[], char message[]) {
+    command_data_t DATA;
+    int i, j, k = 0, count = 0;
+    char station_distance_str[10], command_number_str[10];
+    int len = string_len(command_text);
+    
+    for(i = string_len(command); i < len && command_text[i] != ' '; i++) {
+        station_distance_str[count] = command_text[i];
+        count++;
+    }
+
+    DATA.station_distance = atoi(station_distance_str);
+
+    count = 0;
+    for(j = i + 1 ; j < len && command_text[j] != ' '; j++) {
+        command_number_str[count] = command_text[j];
+        count++;
+    }
+
+    if(command == "rottama-auto" || command == "demolisci-stazione") {
+        DATA.data_num = 1;
+        DATA.data[0] = atoi(command_number_str);
+        DATA.valid = 'Y';
+        return DATA;
+    }
+
+    else if(command == "aggiungi-stazione" || command == "aggiungi-auto") {
+        DATA.data_num = atoi(command_number_str);
+    }
+
+    count = 0;
+    char* data_str = (char*)malloc(2*sizeof(char));
+    data_str[0] = '\0';
+    for(i = j + 1; i < len && count < DATA.data_num; i++) {
+        if(command_text[i] != ' ' && command_text[i] != '\0') {
+            data_str = (char*)realloc(data_str, (k+2)*sizeof(char));
+            data_str[k] = command_text[i];
+            data_str[k+1] = '\0';
+            k++;
+        }
+        else {
+            data_str = (char*)realloc(data_str, (k+2)*sizeof(char));
+            data_str[k] = '\0';
+            DATA.data[count] = atoi(data_str);
+            if(DATA.data[count] == 0) {
+                printf("non %s\n", message);
+                DATA.valid = 'N';
+                return DATA;
+            }
+            free(data_str);
+            data_str = (char*)malloc(2*sizeof(char));
+            data_str[0] = '\0';
+            k = 0;
+            count++;
+        }
+    }
+    if(count != DATA.data_num) {
+        printf("non %s\n", message);
+        DATA.valid = 'N';
+        return DATA;
+    }
+
+    DATA.valid = 'Y';
+    printf("%s\n", message);
+    return DATA;
+}
+
+void printData(command_data_t DATA) {
+    printf("Station Distance: %d\n", DATA.station_distance);
+    printf("Data Num: %d\n", DATA.data_num);
+    for (int i=0; i<DATA.data_num; i++) {
+        printf("Data #%d: %d\n", i, DATA.data[i]);
+    }
+    printf("Valid: %c\n",DATA.valid);
+}
+
 int main() {
     char command[COMMAND_LENGTH], station_distance_str[10], command_number_str[10];
     int i, j, command_number, station_distance;
@@ -146,74 +224,21 @@ int main() {
 
     while (1) {
         int nope = 0;
+        command_data_t DATA;
         scanf("%[^\n]%*c", command);
         if(string_compare(command, "aggiungi-auto", 12) == 1) {
-            if(command[13] != ' ' || command[14] == ' ') {    //solo alcuni dei casi possibili per non accettare l'input, da vedere se l'input è sempre corretto
-                nope = 1;
-            }
-            else {
-                int count = 0;
-                for(i = 14; i<COMMAND_LENGTH && command[i] != ' '; i++) {
-                    station_distance_str[count] = command[i];
-                    count++;
-                }
-                
-                station_distance = atoi(station_distance_str);
-                
-                count = 0;
-                for(j = i + 1; j<COMMAND_LENGTH && command[j] != ' '; j++) {
-                    command_number_str[count] = command[j];
-                    count++;
-                }
-                command_number = atoi(command_number_str);
-
-                int macchine[command_number];
-                int k = 0;
-                count = 0;
-                char data_str[10];
-                for(i = j + 1; i<COMMAND_LENGTH && count < command_number; i++) {
-                    if(command[i] != ' ') {
-                        data_str[k] = command[i];
-                        k++;
-                    }
-                    else {
-                        if(atoi(data_str) == 0) {
-                            nope = 1;
-                            break;
-                        }
-                        macchine[count] = atoi(data_str);
-                        for(j = 0; j < k+1; j++) {
-                            data_str[j] = ' ';
-                        }
-                        k = 0;
-                        count++;     
-                    }
-                }
-                //
-                for(i=0; i<command_number; i++) {
-                    printf("%d ", macchine[i]);
-                } printf("\n");
-
-                if(count != command_number) {
-                    nope = 1;
-                }
-                if(nope == 1) {
-                    printf("non aggiunta\n");
-                }
-                else {
-                    printf("aggiunta\n");
-                }
-            }      
+            DATA = parse_command(command, "aggiungi-auto", "aggiunta");
         }
-        if(string_compare(command, "rottama-auto", 11) == 1) {
-            if(command[12] != ' ' || command[13] == ' ') {
-                nope = 1;
-            }
-            else {
-                int count = 0;
-                for(i = 13; i < COMMAND_LENGTH; )
-            }
+        else if(string_compare(command, "rottama-auto", 11) == 1) {
+            DATA = parse_command(command, "rottama-auto", "rottamata");
         }
+        else if(string_compare(command, "aggiungi-stazione", 16) == 1) {
+            DATA = parse_command(command, "aggiungi-stazione", "aggiunta");
+        }
+        else if(string_compare(command, "demolisci-stazione", 17) == 1) {
+            DATA = parse_command(command, "demolisci-stazione", "demolita");
+        }
+        printData(DATA);
         nope = 0;
     }
     return 0;
