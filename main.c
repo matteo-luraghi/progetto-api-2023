@@ -27,6 +27,25 @@ macchina_t* tree_search(macchina_t* x, int autonomia) {
     }
 }
 
+macchina_t* tree_min(macchina_t* x) {
+    while(x->left != NULL) {
+        x = x->left;
+    }
+    return x;
+}
+
+macchina_t* tree_successor(macchina_t* x) {
+    if(x->right != NULL) {
+        return tree_min(x->right);
+    }
+    macchina_t* y = x->p;
+    while(y != NULL && x == y->right) {
+        x = y;
+        y = y->p;
+    }
+    return y;
+}
+
 void tree_insert(albero_t* T, int autonomia) {
     if(autonomia > T->max) {
         T->max = autonomia;
@@ -60,25 +79,6 @@ void tree_insert(albero_t* T, int autonomia) {
     else {
         y->right = z;
     }
-}
-
-macchina_t* tree_min(macchina_t* x) {
-    while(x->left != NULL) {
-        x = x->left;
-    }
-    return x;
-}
-
-macchina_t* tree_successor(macchina_t* x) {
-    if(x->right != NULL) {
-        return tree_min(x->right);
-    }
-    macchina_t* y = x->p;
-    while(y != NULL && x == y->right) {
-        x = y;
-        y = y->p;
-    }
-    return y;
 }
 
 void tree_delete(albero_t* T, macchina_t* z) {
@@ -215,12 +215,10 @@ void printData(command_data_t DATA) {
 }
 
 int main() {
-    char command[COMMAND_LENGTH], station_distance_str[10], command_number_str[10];
-    int i, j, command_number, station_distance;
+    char command[COMMAND_LENGTH];
     albero_t* T = malloc(sizeof(albero_t));
     T->root = NULL;
     T->max = 0;
-    int autonomia;
 
     while (1) {
         int nope = 0;
