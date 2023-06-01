@@ -9,17 +9,44 @@ typedef struct nodo_rb {
     int autonomia;
 } macchina_t;
 
-typedef struct nodo_rb* albero_macchine_t;
+typedef struct albero_rb {
+    macchina_t* root;
+    int max;
+} albero_t;
 
-void stampa_albero(albero_macchine_t T) {
-    if (T != NULL) {
-        stampa_albero(T->left);
-        printf("%d\n",T->autonomia);
-        stampa_albero(T->right);
-    }
+//-------------------------------------------------------
+// TO REMOVE BEFORE UPLOAD
+#define COUNT 10
+void print2DUtil(macchina_t* root, int space){
+    // Base case
+    if (root == NULL)
+        return;
+ 
+    // Increase distance between levels
+    space += COUNT;
+ 
+    // Process right child first
+    print2DUtil(root->right, space);
+ 
+    // Print current node after space
+    // count
+    printf("\n");
+    for (int i = COUNT; i < space; i++)
+        printf(" ");
+    printf("%d - %c\n", root->autonomia, root->color);
+ 
+    // Process left child
+    print2DUtil(root->left, space);
 }
+ 
+// Wrapper over print2DUtil()
+void print2D(macchina_t* root){
+    // Pass initial space count as 0
+    print2DUtil(root, 0);
+}
+//-------------------------------------------------------
 
-void left_rotate(albero_macchine_t T, macchina_t* x) {
+void left_rotate(albero_t* T, macchina_t* x) {
     macchina_t* y = x->right;
     x->right = y->left;
     if(y->left != NULL) {
@@ -27,7 +54,7 @@ void left_rotate(albero_macchine_t T, macchina_t* x) {
     }
     y->p = x->p;
     if(x->p == NULL) {
-        T = y;
+        T->root = y;
     }
     else if(x == x->p->left) {
         x->p->left = y;
@@ -39,69 +66,83 @@ void left_rotate(albero_macchine_t T, macchina_t* x) {
     x->p = y;
 }
 
-void right_rotate(albero_macchine_t T, macchina_t* x) {
-    macchina_t* y = x->left;
-    x->left = y->right;
-    if(y->right != NULL) {
-        y->right->p = x;
+void right_rotate(albero_t* T, macchina_t* y) {
+    macchina_t* x = y->left;
+    y->left = x->right;
+    if(x->right != NULL) {
+        x->right->p = y;
     }
-    y->p = x->p;
-    if(x->p == NULL) {
-        T = y;
+    x->p = y->p;
+    if(y->p == NULL) {
+        T->root = x;
     }
-    else if(x == x->p->right) {
-        x->p->right = y;
+    else if(y == y->p->left) {
+        y->p->left = x;
     }
     else {
-        x->p->right = y;
+        y->p->right = x;
     }
-    y->right = x;
-    x->p= y;
+    x->right = y;
+    y->p = x;
 }
 
-void rb_insert_fixup(albero_macchine_t T, macchina_t* z) {
-    while(z->p != NULL && z->p->color == 'R') {
-        if(z->p == z->p->p->left) {
-            macchina_t* y = z->p->p->right;
-            if(y != NULL && y->color == 'R') {
-                z->p->color = 'B';
-                y->color = 'B';
-                z->p->p->color = 'R';
-                z = z->p->p;
-            } 
+void rb_insert_fixup(albero_t* T, macchina_t* x) {
+    macchina_t* parent_pt = NULL;
+    macchina_t* grand_parent_pt = NULL;
+
+    while((x != T->root) && (x->color != 'B') && (x->p->color == 'R')) {
+        parent_pt = x->p;
+        grand_parent_pt = x->p->p;
+
+        if(parent_pt == grand_parent_pt->left) {
+            macchina_t* uncle_pt = grand_parent_pt->right;
+            if(uncle_pt != NULL && uncle_pt->color == 1) {
+                grand_parent_pt->color = 'R';
+                parent_pt->color = 'B';
+                uncle_pt->color = 'B';
+                x = grand_parent_pt;
+            }
             else {
-                if(z == z->p->right) {
-                    z = z->p;
-                    left_rotate(T,z);
+                if(x == parent_pt->right) {
+                    left_rotate(T, parent_pt);
+                    x = parent_pt;
+                    parent_pt = x->p;
                 }
-                z->p->color = 'B';
-                z->p->p->color = 'R';
-                right_rotate(T, z->p->p);
+
+                right_rotate(T, grand_parent_pt);
+                char temp = parent_pt->color;
+                parent_pt->color = grand_parent_pt->color;
+                grand_parent_pt->color = temp;
+                x = parent_pt;
             }
         }
+
         else {
-            macchina_t* y = z->p->p->left;
-            if(y != NULL && y->color == 'R') {
-                z->p->color = 'B';
-                y->color = 'B';
-                z->p->p->color = 'R';
-                z = z->p->p;
+            macchina_t* uncle_pt = grand_parent_pt->left;
+            if((uncle_pt != NULL) && (uncle_pt->color == 'R')) {
+                grand_parent_pt->color = 'R';
+                parent_pt->color = 'B';
+                uncle_pt->color = 'B';
+                x = grand_parent_pt;
             }
             else {
-                if(z == z->p->left) {
-                    z = z->p;
-                    right_rotate(T, z);
+                if(x == parent_pt->l) {
+                    right_rotate(parent_pt);
+                    x = parent_pt;
+                    parent_pt = x->p;
                 }
-                z->p->color = 'B';
-                z->p->p->color = 1;
-                left_rotate(T, z->p->p);
+
+                left_rotate(grand_parent_pt);
+                char temp = parent_pt->color;
+                parent_pt->color = grand_parent_pt->color;
+                grand_parent_pt->color = temp;
+                x = parent_pt;
             }
         }
     }
-    T->color = 'B';
 }
 
-albero_macchine_t rb_insert(albero_macchine_t T, int autonomia) {
+void rb_insert(albero_t* T, int autonomia) {
     macchina_t* z = malloc(sizeof(macchina_t));
     z->autonomia = autonomia;
     z->left = NULL;
@@ -109,8 +150,13 @@ albero_macchine_t rb_insert(albero_macchine_t T, int autonomia) {
     z->p = NULL;
     z->color = 'R';
 
+    if(z->autonomia > T->max) {
+        T->max = z->autonomia;
+    }
+
     macchina_t* y = NULL;
-    macchina_t* x = T;
+    macchina_t* x = T->root;
+
     while(x != NULL) {
         y = x;
         if(z->autonomia < x->autonomia) {
@@ -122,7 +168,7 @@ albero_macchine_t rb_insert(albero_macchine_t T, int autonomia) {
     }
     z->p = y;
     if(y == NULL) {
-        T = z;
+        T->root = z;
     }
     else if(z->autonomia < y->autonomia) {
         y->left = z;
@@ -130,24 +176,22 @@ albero_macchine_t rb_insert(albero_macchine_t T, int autonomia) {
     else {
         y->right = z;
     }
-    z->left = NULL;
-    z->right = NULL;
-    z->color = 'R';
     rb_insert_fixup(T, z);
-    return T;
 }
 
 int main() {
-    char input[1024];
-    char* s;
-    albero_macchine_t T = NULL;
+    //char input[1024];
+    //char* s;
+    albero_t* T = malloc(sizeof(albero_t));
+    T->root = NULL;
+    T->max = 0;
     int autonomia;
 
     do {
         printf("Inserisci autonomia: ");
         scanf("%d", &autonomia);
-        T = rb_insert(T, autonomia);
-        stampa_albero(T);
+        rb_insert(T, autonomia);
+        print2D(T->root);
     } while(autonomia != 0);
     
     return 0;
