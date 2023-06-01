@@ -25,7 +25,6 @@ void left_rotate(albero_macchine_t T, macchina_t* x) {
     if(y->left != NULL) {
         y->left->p = x;
     }
-
     y->p = x->p;
     if(x->p == NULL) {
         T = y;
@@ -46,7 +45,6 @@ void right_rotate(albero_macchine_t T, macchina_t* x) {
     if(y->right != NULL) {
         y->right->p = x;
     }
-
     y->p = x->p;
     if(x->p == NULL) {
         T = y;
@@ -62,59 +60,45 @@ void right_rotate(albero_macchine_t T, macchina_t* x) {
 }
 
 void rb_insert_fixup(albero_macchine_t T, macchina_t* z) {
-    macchina_t* y;
-    macchina_t* x;
-
-    if(z == T) {
-        T->color = 'B';
-    }
-    else {
-        x = z->p;
-        if(x->color == 'R') {
-            if(x == x->p->left) {       
-                y = x->p->right;
-                if(y->color == 'R') {       
-                    x->color = 'B';
-                    y->color = 'B';
-                    x->p->color = 'R';
-                    rb_insert_fixup(T, x->p);
+    while(z->p != NULL && z->p->color == 'R') {
+        if(z->p == z->p->p->left) {
+            macchina_t* y = z->p->p->right;
+            if(y != NULL && y->color == 'R') {
+                z->p->color = 'B';
+                y->color = 'B';
+                z->p->p->color = 'R';
+                z = z->p->p;
+            } 
+            else {
+                if(z == z->p->right) {
+                    z = z->p;
+                    left_rotate(T,z);
                 }
-                else if(z == x->right){
-                
-                    z = x;
-                
-                    left_rotate(T, z);
-                
-                    x = z->p;
-                }
-                
-                x->color = 'B';
-                
-                x->p->color = 'R';
-                
-                right_rotate(T, x->p);
+                z->p->color = 'B';
+                z->p->p->color = 'R';
+                right_rotate(T, z->p->p);
             }
         }
         else {
-            if(x == x->p->right) {        
-                y = x->p->left;
-                if(y->color == 'R') {
-                    x->color = 'B';
-                    y->color = 'B';
-                    x->p->color = 'R';
-                    rb_insert_fixup(T, x->p);
-                }
-                else if(z == x->left){
-                    z = x;
+            macchina_t* y = z->p->p->left;
+            if(y != NULL && y->color == 'R') {
+                z->p->color = 'B';
+                y->color = 'B';
+                z->p->p->color = 'R';
+                z = z->p->p;
+            }
+            else {
+                if(z == z->p->left) {
+                    z = z->p;
                     right_rotate(T, z);
-                    x = z->p;
                 }
-                x->color = 'B';
-                x->p->color = 'R';
-                left_rotate(T, x->p);
+                z->p->color = 'B';
+                z->p->p->color = 1;
+                left_rotate(T, z->p->p);
             }
         }
     }
+    T->color = 'B';
 }
 
 albero_macchine_t rb_insert(albero_macchine_t T, int autonomia) {
