@@ -1,11 +1,12 @@
 #include<stdio.h>
 #include<stdlib.h>
-
+#define COMMAND_LENGTH 1024
+//----------------------------------------------------
+// BST DATA STRUCTURE AND FUNCTIONS
 typedef struct nodo_rb {
     struct nodo_rb *right;
     struct nodo_rb *left;
     struct nodo_rb *p;
-    char color;
     int autonomia;
 } macchina_t;
 
@@ -14,145 +15,28 @@ typedef struct albero_rb {
     int max;
 } albero_t;
 
-//-------------------------------------------------------
-// TO REMOVE BEFORE UPLOAD
-#define COUNT 10
-void print2DUtil(macchina_t* root, int space){
-    // Base case
-    if (root == NULL)
-        return;
- 
-    // Increase distance between levels
-    space += COUNT;
- 
-    // Process right child first
-    print2DUtil(root->right, space);
- 
-    // Print current node after space
-    // count
-    printf("\n");
-    for (int i = COUNT; i < space; i++)
-        printf(" ");
-    printf("%d - %c\n", root->autonomia, root->color);
- 
-    // Process left child
-    print2DUtil(root->left, space);
-}
- 
-// Wrapper over print2DUtil()
-void print2D(macchina_t* root){
-    // Pass initial space count as 0
-    print2DUtil(root, 0);
-}
-//-------------------------------------------------------
-
-void left_rotate(albero_t* T, macchina_t* x) {
-    macchina_t* y = x->right;
-    x->right = y->left;
-    if(y->left != NULL) {
-        y->left->p = x;
+macchina_t* tree_search(macchina_t* x, int autonomia) {
+    if(x == NULL || autonomia == x->autonomia) {
+        return x;
     }
-    y->p = x->p;
-    if(x->p == NULL) {
-        T->root = y;
-    }
-    else if(x == x->p->left) {
-        x->p->left = y;
+    if(autonomia < x->autonomia) {
+        return tree_search(x->left, autonomia);
     }
     else {
-        x->p->right = y;
-    }
-    y->left = x;
-    x->p = y;
-}
-
-void right_rotate(albero_t* T, macchina_t* y) {
-    macchina_t* x = y->left;
-    y->left = x->right;
-    if(x->right != NULL) {
-        x->right->p = y;
-    }
-    x->p = y->p;
-    if(y->p == NULL) {
-        T->root = x;
-    }
-    else if(y == y->p->left) {
-        y->p->left = x;
-    }
-    else {
-        y->p->right = x;
-    }
-    x->right = y;
-    y->p = x;
-}
-
-void rb_insert_fixup(albero_t* T, macchina_t* x) {
-    macchina_t* parent_pt = NULL;
-    macchina_t* grand_parent_pt = NULL;
-
-    while((x != T->root) && (x->color != 'B') && (x->p->color == 'R')) {
-        parent_pt = x->p;
-        grand_parent_pt = x->p->p;
-
-        if(parent_pt == grand_parent_pt->left) {
-            macchina_t* uncle_pt = grand_parent_pt->right;
-            if(uncle_pt != NULL && uncle_pt->color == 1) {
-                grand_parent_pt->color = 'R';
-                parent_pt->color = 'B';
-                uncle_pt->color = 'B';
-                x = grand_parent_pt;
-            }
-            else {
-                if(x == parent_pt->right) {
-                    left_rotate(T, parent_pt);
-                    x = parent_pt;
-                    parent_pt = x->p;
-                }
-
-                right_rotate(T, grand_parent_pt);
-                char temp = parent_pt->color;
-                parent_pt->color = grand_parent_pt->color;
-                grand_parent_pt->color = temp;
-                x = parent_pt;
-            }
-        }
-
-        else {
-            macchina_t* uncle_pt = grand_parent_pt->left;
-            if((uncle_pt != NULL) && (uncle_pt->color == 'R')) {
-                grand_parent_pt->color = 'R';
-                parent_pt->color = 'B';
-                uncle_pt->color = 'B';
-                x = grand_parent_pt;
-            }
-            else {
-                if(x == parent_pt->l) {
-                    right_rotate(parent_pt);
-                    x = parent_pt;
-                    parent_pt = x->p;
-                }
-
-                left_rotate(grand_parent_pt);
-                char temp = parent_pt->color;
-                parent_pt->color = grand_parent_pt->color;
-                grand_parent_pt->color = temp;
-                x = parent_pt;
-            }
-        }
+        return tree_search(x->right, autonomia);
     }
 }
 
-void rb_insert(albero_t* T, int autonomia) {
+void tree_insert(albero_t* T, int autonomia) {
+    if(autonomia > T->max) {
+        T->max = autonomia;
+    }
+
     macchina_t* z = malloc(sizeof(macchina_t));
     z->autonomia = autonomia;
     z->left = NULL;
     z->right = NULL;
     z->p = NULL;
-    z->color = 'R';
-
-    if(z->autonomia > T->max) {
-        T->max = z->autonomia;
-    }
 
     macchina_t* y = NULL;
     macchina_t* x = T->root;
@@ -176,34 +60,161 @@ void rb_insert(albero_t* T, int autonomia) {
     else {
         y->right = z;
     }
-    rb_insert_fixup(T, z);
+}
+
+macchina_t* tree_min(macchina_t* x) {
+    while(x->left != NULL) {
+        x = x->left;
+    }
+    return x;
+}
+
+macchina_t* tree_successor(macchina_t* x) {
+    if(x->right != NULL) {
+        return tree_min(x->right);
+    }
+    macchina_t* y = x->p;
+    while(y != NULL && x == y->right) {
+        x = y;
+        y = y->p;
+    }
+    return y;
+}
+
+void tree_delete(albero_t* T, macchina_t* z) {
+    macchina_t* y;
+    macchina_t* x;
+    if(z->left == NULL || z->right == NULL) {
+        y = z;
+    } else {
+        y = tree_successor(z);
+    }
+    if(y->left != NULL) {
+        x = y->left;
+    }
+    else {
+        x = y->right;
+    }
+    if(x != NULL) {
+        x->p = y->p;
+    }
+    if(y->p == NULL) {
+        T->root = x;
+    } else if(y == y->p->left) {
+        y->p->left = x;
+    } else {
+        y->p->right = x;
+    }
+    if(y != z) {
+        z->autonomia = y->autonomia;
+    }
+    free(y);
+}
+//----------------------------------------------------
+
+typedef struct command_data{
+    int stazione;
+    int data_num;
+    int data[data_num];
+} command_data;
+
+int string_compare(char a[], char b[], int len) {
+    int i;
+    for(i=0; i<len; i++) {
+        if(a[i] != b[i]) { 
+            return 0;
+        }
+    }
+    return 1;
+}
+
+int string_len(char a[]) {
+    int i=0;
+    while(a[i] != '\0') {
+        i++;
+    }
+    return i+1;
 }
 
 int main() {
-    //char input[1024];
-    //char* s;
+    char command[COMMAND_LENGTH], station_distance_str[10], command_number_str[10];
+    int i, j, command_number, station_distance;
     albero_t* T = malloc(sizeof(albero_t));
     T->root = NULL;
     T->max = 0;
     int autonomia;
 
-    do {
-        printf("Inserisci autonomia: ");
-        scanf("%d", &autonomia);
-        rb_insert(T, autonomia);
-        print2D(T->root);
-    } while(autonomia != 0);
-    
-    return 0;
-    /*
     while (1) {
-        if (fgets(input, 1024, stdin) != NULL) {
-            for (s = input; (*s != '\n') && *s == ' '; s++){}; 
-            if (*s == '\n')
-                break;
-            else
-                printf("%s\n", input);
+        int nope = 0;
+        scanf("%[^\n]%*c", command);
+        if(string_compare(command, "aggiungi-auto", 12) == 1) {
+            if(command[13] != ' ' || command[14] == ' ') {    //solo alcuni dei casi possibili per non accettare l'input, da vedere se l'input è sempre corretto
+                nope = 1;
+            }
+            else {
+                int count = 0;
+                for(i = 14; i<COMMAND_LENGTH && command[i] != ' '; i++) {
+                    station_distance_str[count] = command[i];
+                    count++;
+                }
+                
+                station_distance = atoi(station_distance_str);
+                
+                count = 0;
+                for(j = i + 1; j<COMMAND_LENGTH && command[j] != ' '; j++) {
+                    command_number_str[count] = command[j];
+                    count++;
+                }
+                command_number = atoi(command_number_str);
+
+                int macchine[command_number];
+                int k = 0;
+                count = 0;
+                char data_str[10];
+                for(i = j + 1; i<COMMAND_LENGTH && count < command_number; i++) {
+                    if(command[i] != ' ') {
+                        data_str[k] = command[i];
+                        k++;
+                    }
+                    else {
+                        if(atoi(data_str) == 0) {
+                            nope = 1;
+                            break;
+                        }
+                        macchine[count] = atoi(data_str);
+                        for(j = 0; j < k+1; j++) {
+                            data_str[j] = ' ';
+                        }
+                        k = 0;
+                        count++;     
+                    }
+                }
+                //
+                for(i=0; i<command_number; i++) {
+                    printf("%d ", macchine[i]);
+                } printf("\n");
+
+                if(count != command_number) {
+                    nope = 1;
+                }
+                if(nope == 1) {
+                    printf("non aggiunta\n");
+                }
+                else {
+                    printf("aggiunta\n");
+                }
+            }      
         }
+        if(string_compare(command, "rottama-auto", 11) == 1) {
+            if(command[12] != ' ' || command[13] == ' ') {
+                nope = 1;
+            }
+            else {
+                int count = 0;
+                for(i = 13; i < COMMAND_LENGTH; )
+            }
+        }
+        nope = 0;
     }
-    return 0;*/
+    return 0;
 }
