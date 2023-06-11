@@ -1,8 +1,12 @@
 #include<stdio.h>
 #include<stdlib.h>
 #define COMMAND_LENGTH 1024
+#define AGGIUNGI_AUTO '1'
+#define ROTTAMA_AUTO '2'
+#define AGGIUNGI_STAZIONE '3'
+#define DEMOLISCI_STAZIONE '4'
 //----------------------------------------------------
-// BST DATA STRUCTURE AND FUNCTIONS
+//DATA STRUCTURE AND FUNCTIONS
 typedef struct nodo_albero {
     struct nodo_albero *right;
     struct nodo_albero *left;
@@ -550,6 +554,46 @@ nodo_grafo_t* graph_delete(grafo_t* T, int distanza) {
     return y;
 }
 
+//-------------------------------------------------------
+// TO REMOVE BEFORE UPLOAD
+#define COUNT 10
+void print2DUtilTree(nodo_albero_t* root, int space, nodo_albero_t* NIL){
+    if (root == NIL)
+        return;
+    space += COUNT;
+    print2DUtilTree(root->right, space, NIL);
+    printf("\n");
+    for (int i = COUNT; i < space; i++)
+        printf(" ");
+    printf("%d - %c\n", root->data, root->color);
+    print2DUtilTree(root->left, space, NIL);
+}
+ 
+// Wrapper over print2DUtil()
+void print2DTree(nodo_albero_t* root, nodo_albero_t* NIL){
+    // Pass initial space count as 0
+    print2DUtilTree(root, 0, NIL);
+}
+///////////////////////////////////////////////////////////////
+void print2DUtilGraph(nodo_grafo_t* root, int space, nodo_grafo_t* NIL){
+    if (root == NIL)
+        return;
+    space += COUNT;
+    print2DUtilGraph(root->right, space, NIL);
+    printf("\n");
+    for (int i = COUNT; i < space; i++)
+        printf(" ");
+    printf("%d - %c\n", root->stazione->distanza, root->color);
+    print2DUtilGraph(root->left, space, NIL);
+}
+ 
+// Wrapper over print2DUtilGraph()
+void print2DGRAPH(nodo_grafo_t* root, nodo_grafo_t* NIL){
+    // Pass initial space count as 0
+    print2DUtilGraph(root, 0, NIL);
+}
+//-------------------------------------------------------
+
 //----------------------------------------------------
 
 int string_compare(char a[], char b[], int len) {
@@ -589,10 +633,17 @@ command_data_t update_graph(grafo_t* GRAPH, char command_text[], char command, i
         count++;
     }
 
-    DATA.station_distance = atoi(station_distance_str);
-    //if the command is aggiungi-stazione and the station is not in the graph this will add it
-    if(command== '3' && graph_search(GRAPH, GRAPH->root, atoi(station_distance_str)) == NULL) {
-        graph_insert(GRAPH, atoi(station_distance_str));
+    int station_distance = atoi(station_distance_str);
+
+    DATA.station_distance = station_distance;
+    if(command == AGGIUNGI_STAZIONE && graph_search(GRAPH, GRAPH->root, station_distance) == GRAPH->nil) {
+        graph_insert(GRAPH, station_distance);
+    }
+    else if(command == DEMOLISCI_STAZIONE && graph_search(GRAPH, GRAPH->root, station_distance) != GRAPH->nil) {
+        nodo_grafo_t* deleted = graph_delete(GRAPH, station_distance);
+        free(deleted);
+        //change this function type to int
+        //return 0;
     }
 
     count = 0;
@@ -601,15 +652,23 @@ command_data_t update_graph(grafo_t* GRAPH, char command_text[], char command, i
         count++;
     }
 
-    if(command == '2' || command == '4') {
+    int command_number = atoi(command_number_str);
+
+    if(command == ROTTAMA_AUTO) {
+        nodo_grafo_t* current_station = graph_search(GRAPH, GRAPH->root, station_distance);
+        nodo_albero_t* deleted_auto = rb_delete(current_station, command_number);
+        free(deleted_auto)
+        //return 0;
+
+        //to be deleted
         DATA.data_num = 1;
-        DATA.data[0] = atoi(command_number_str);
+        DATA.data[0] = command_number;
         DATA.valid = 'Y';
         return DATA;
     }
 
-    else if(command == '3' || command == '1') {
-        DATA.data_num = atoi(command_number_str);
+    else if(command == AGGIUNGI_STAZIONE || command == AGGIUNGI_AUTO) {
+        DATA.data_num = command_number;
     }
 
     count = 0;
@@ -660,24 +719,26 @@ void printData(command_data_t DATA) {
 
 int main() {
     grafo_t* GRAPH = malloc(sizeof(grafo_t));
-    GRAPH->root = NULL;
+    GRAPH->nil = malloc(sizeof(nodo_grafo_t));
+    GRAPH->nil->color = 'B';
+    GRAPH->root = GRAPH->nil;
     char command[COMMAND_LENGTH];
     while (fgets(command, COMMAND_LENGTH, stdin)!=NULL) {
         command_data_t DATA;
         if(string_compare(command, "aggiungi-auto", 12) == 1) {
-            DATA = update_graph(GRAPH,command, '1', 14,"aggiunta");
+            DATA = update_graph(GRAPH,command, AGGIUNGI_AUTO, 14,"aggiunta");
         }
         else if(string_compare(command, "rottama-auto", 11) == 1) {
-            DATA = update_graph(GRAPH,command, '2', 13,"rottamata");
+            DATA = update_graph(GRAPH,command, ROTTAMA_AUTO, 13,"rottamata");
         }
         else if(string_compare(command, "aggiungi-stazione", 16) == 1) {
-            DATA = update_graph(GRAPH,command, '3', 18,"aggiunta");
+            DATA = update_graph(GRAPH,command, AGGIUNGI_STAZIONE, 18,"aggiunta");
         }
         else if(string_compare(command, "demolisci-stazione", 17) == 1) {
-            DATA = update_graph(GRAPH,command, '4', 19,"demolita");
+            DATA = update_graph(GRAPH,command, DEMOLISCI_STAZIONE, 19,"demolita");
         }
         printData(DATA);
-        //print2DGRAPH(GRAPH->root);
+        print2DGRAPH(GRAPH->root, GRAPH->nil);
     }
     return 0;
 }
