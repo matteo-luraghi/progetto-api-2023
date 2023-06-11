@@ -636,16 +636,7 @@ int string_len(char a[]) {
     return i+1;
 }
 
-//temp data structure, the data will go directly in the graph
-typedef struct command_data{
-    int station_distance;
-    int data_num;
-    int data[512];
-    char valid;
-} command_data_t;
-
-command_data_t update_graph(grafo_t* GRAPH, char command_text[], char command, int command_len, char message[]) {
-    command_data_t DATA;
+int update_graph(grafo_t* GRAPH, char command_text[], char command, int command_len, char message[]) {
     int i, j, k = 0, count = 0;
     char station_distance_str[10], command_number_str[10];
     int len = string_len(command_text);
@@ -657,15 +648,13 @@ command_data_t update_graph(grafo_t* GRAPH, char command_text[], char command, i
 
     int station_distance = atoi(station_distance_str);
 
-    DATA.station_distance = station_distance;
     if(command == AGGIUNGI_STAZIONE && graph_search(GRAPH, GRAPH->root, station_distance) == GRAPH->nil) {
         graph_insert(GRAPH, station_distance);
     }
     else if(command == DEMOLISCI_STAZIONE && graph_search(GRAPH, GRAPH->root, station_distance) != GRAPH->nil) {
         nodo_grafo_t* deleted = graph_delete(GRAPH, station_distance);
         free(deleted);
-        //change this function type to int
-        //return 0;
+        return 0;
     }
 
     count = 0;
@@ -680,20 +669,13 @@ command_data_t update_graph(grafo_t* GRAPH, char command_text[], char command, i
         nodo_grafo_t* current_station = graph_search(GRAPH, GRAPH->root, station_distance);
         nodo_albero_t* deleted_auto = rb_delete(current_station->stazione, command_number);
         free(deleted_auto);
-        //return 0;
-
-        //to be deleted
-        DATA.data_num = 1;
-        DATA.data[0] = command_number;
-        DATA.valid = 'Y';
-        return DATA;
+        return 0;
     }
 
     else if(command == AGGIUNGI_AUTO) {
-        DATA.data_num = command_number;
         nodo_grafo_t* current_station = graph_search(GRAPH, GRAPH->root, station_distance);
         tree_insert(current_station->stazione, command_number);
-        //return 0;
+        return 0;
     }
     else if(command == AGGIUNGI_STAZIONE) {
         nodo_grafo_t* current_station = graph_search(GRAPH, GRAPH->root, station_distance);
@@ -713,14 +695,9 @@ command_data_t update_graph(grafo_t* GRAPH, char command_text[], char command, i
                 data_str[k] = '\0';
                 data = atoi(data_str);
                 tree_insert(current_station->stazione, data);
-                //cancel
-                DATA.data[count] = data;
                 if(data == 0) {
                     printf("non %s\n", message);
-                    //cancel
-                    DATA.valid = 'N';
-                    return DATA;
-                    //return 1;
+                    return 0;
                 }
                 free(data_str);
                 data_str = (char*)malloc(2*sizeof(char));
@@ -731,25 +708,13 @@ command_data_t update_graph(grafo_t* GRAPH, char command_text[], char command, i
         }
         if(count != command_number) {
             printf("non %s\n", message);
-            DATA.valid = 'N';
-            return DATA;
-            //return 1;
+            return 0;
         }
 
-        DATA.valid = 'Y';
         printf("%s\n", message);
-        return DATA;
+        return 0;
     }
-    return DATA;
-}
-
-void printData(command_data_t DATA) {
-    printf("Station Distance: %d\n", DATA.station_distance);
-    printf("Data Num: %d\n", DATA.data_num);
-    for (int i=0; i<DATA.data_num; i++) {
-        printf("Data #%d: %d\n", i, DATA.data[i]);
-    }
-    printf("Valid: %c\n",DATA.valid);
+    return 1;
 }
 
 int main() {
@@ -759,22 +724,26 @@ int main() {
     GRAPH->root = GRAPH->nil;
     char command[COMMAND_LENGTH];
     while (fgets(command, COMMAND_LENGTH, stdin)!=NULL) {
-        command_data_t DATA;
+        int dataret = 0;
         if(string_compare(command, "aggiungi-auto", 12) == 1) {
-            DATA = update_graph(GRAPH,command, AGGIUNGI_AUTO, 14,"aggiunta");
+            dataret = update_graph(GRAPH,command, AGGIUNGI_AUTO, 14,"aggiunta");
         }
         else if(string_compare(command, "rottama-auto", 11) == 1) {
-            DATA = update_graph(GRAPH,command, ROTTAMA_AUTO, 13,"rottamata");
+            dataret = update_graph(GRAPH,command, ROTTAMA_AUTO, 13,"rottamata");
         }
         else if(string_compare(command, "aggiungi-stazione", 16) == 1) {
-            DATA = update_graph(GRAPH,command, AGGIUNGI_STAZIONE, 18,"aggiunta");
+            dataret = update_graph(GRAPH,command, AGGIUNGI_STAZIONE, 18,"aggiunta");
         }
         else if(string_compare(command, "demolisci-stazione", 17) == 1) {
-            DATA = update_graph(GRAPH,command, DEMOLISCI_STAZIONE, 19,"demolita");
+            dataret = update_graph(GRAPH,command, DEMOLISCI_STAZIONE, 19,"demolita");
         }
-        printData(DATA);
-        print2DGRAPH(GRAPH->root, GRAPH->nil);
-        graph_walk(GRAPH->root, GRAPH->nil);
+        if(dataret == 0) {
+            print2DGRAPH(GRAPH->root, GRAPH->nil);
+            graph_walk(GRAPH->root, GRAPH->nil);
+        }
+        else {
+            printf("Error\n");
+        }
     }
     return 0;
 }
