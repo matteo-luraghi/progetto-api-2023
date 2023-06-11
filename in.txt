@@ -1,7 +1,11 @@
 aggiungi-stazione 10 1 2
 aggiungi-stazione 20 3 45 5 56
 aggiungi-stazione 5 2 2 23
-aggiungi-stazione 2 2 2 23
 demolisci-stazione 10
 demolisci-stazione 30
 aggiungi-stazione 1 2 2 23
+rottama-auto 1 2
+aggiungi-auto 5 4
+aggiungi-auto 5 4
+aggiungi-stazione 2 3 2 2 23
+rottama-auto 20 56

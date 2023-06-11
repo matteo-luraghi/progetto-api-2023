@@ -307,6 +307,16 @@ nodo_albero_t* rb_delete(stazione_t* T, int data) {
         return z;
     }
 
+    //updating the max
+    if(data == T->max) {
+        if(z->left == T->nil) {
+            T->max = z->p->data;    
+        }
+        else {
+            T->max = z->left->data;
+        }
+    }
+
     if(z->left == T->nil || z->right == T->nil) {
         y = z;
     }
@@ -428,8 +438,11 @@ void graph_insert_fixup(grafo_t* GRAPH, nodo_grafo_t* z) {
 void graph_insert(grafo_t* GRAPH, int stazione) {
     nodo_grafo_t* z = malloc(sizeof(nodo_grafo_t));
     z->stazione = malloc(sizeof(stazione_t));
+    z->stazione->nil = malloc(sizeof(nodo_albero_t));
+    z->stazione->nil->color = 'B';
+    z->stazione->root = z->stazione->nil;
     z->stazione->distanza = stazione;
-    tree_insert(z->stazione, stazione);
+    z->stazione->max = 0;
 
     nodo_grafo_t* y = GRAPH->nil;
     nodo_grafo_t* x = GRAPH->root;
@@ -592,6 +605,15 @@ void print2DGRAPH(nodo_grafo_t* root, nodo_grafo_t* NIL){
     // Pass initial space count as 0
     print2DUtilGraph(root, 0, NIL);
 }
+
+void graph_walk(nodo_grafo_t* x, nodo_grafo_t* NIL) {
+    if(x != NIL) {
+        graph_walk(x->left, NIL);
+        printf("Albero: %d, max: %d\n", x->stazione->distanza, x->stazione->max);
+        print2DTree(x->stazione->root, x->stazione->nil);
+        graph_walk(x->right, NIL);
+    }
+}
 //-------------------------------------------------------
 
 //----------------------------------------------------
@@ -656,8 +678,8 @@ command_data_t update_graph(grafo_t* GRAPH, char command_text[], char command, i
 
     if(command == ROTTAMA_AUTO) {
         nodo_grafo_t* current_station = graph_search(GRAPH, GRAPH->root, station_distance);
-        nodo_albero_t* deleted_auto = rb_delete(current_station, command_number);
-        free(deleted_auto)
+        nodo_albero_t* deleted_auto = rb_delete(current_station->stazione, command_number);
+        free(deleted_auto);
         //return 0;
 
         //to be deleted
@@ -667,44 +689,57 @@ command_data_t update_graph(grafo_t* GRAPH, char command_text[], char command, i
         return DATA;
     }
 
-    else if(command == AGGIUNGI_STAZIONE || command == AGGIUNGI_AUTO) {
+    else if(command == AGGIUNGI_AUTO) {
         DATA.data_num = command_number;
+        nodo_grafo_t* current_station = graph_search(GRAPH, GRAPH->root, station_distance);
+        tree_insert(current_station->stazione, command_number);
+        //return 0;
     }
-
-    count = 0;
-    char* data_str = (char*)malloc(2*sizeof(char));
-    data_str[0] = '\0';
-    for(i = j + 1; i < len && count < DATA.data_num; i++) {
-        if(command_text[i] != ' ' && command_text[i] != '\0') {
-            data_str = (char*)realloc(data_str, (k+2)*sizeof(char));
-            data_str[k] = command_text[i];
-            data_str[k+1] = '\0';
-            k++;
-        }
-        else {
-            data_str = (char*)realloc(data_str, (k+2)*sizeof(char));
-            data_str[k] = '\0';
-            DATA.data[count] = atoi(data_str);
-            if(DATA.data[count] == 0) {
-                printf("non %s\n", message);
-                DATA.valid = 'N';
-                return DATA;
+    else if(command == AGGIUNGI_STAZIONE) {
+        nodo_grafo_t* current_station = graph_search(GRAPH, GRAPH->root, station_distance);
+        count = 0;
+        char* data_str = (char*)malloc(2*sizeof(char));
+        int data;
+        data_str[0] = '\0';
+        for(i = j + 1; i < len && count < command_number; i++) {
+            if(command_text[i] != ' ' && command_text[i] != '\0') {
+                data_str = (char*)realloc(data_str, (k+2)*sizeof(char));
+                data_str[k] = command_text[i];
+                data_str[k+1] = '\0';
+                k++;
             }
-            free(data_str);
-            data_str = (char*)malloc(2*sizeof(char));
-            data_str[0] = '\0';
-            k = 0;
-            count++;
+            else {
+                data_str = (char*)realloc(data_str, (k+2)*sizeof(char));
+                data_str[k] = '\0';
+                data = atoi(data_str);
+                tree_insert(current_station->stazione, data);
+                //cancel
+                DATA.data[count] = data;
+                if(data == 0) {
+                    printf("non %s\n", message);
+                    //cancel
+                    DATA.valid = 'N';
+                    return DATA;
+                    //return 1;
+                }
+                free(data_str);
+                data_str = (char*)malloc(2*sizeof(char));
+                data_str[0] = '\0';
+                k = 0;
+                count++;
+            }
         }
-    }
-    if(count != DATA.data_num) {
-        printf("non %s\n", message);
-        DATA.valid = 'N';
+        if(count != command_number) {
+            printf("non %s\n", message);
+            DATA.valid = 'N';
+            return DATA;
+            //return 1;
+        }
+
+        DATA.valid = 'Y';
+        printf("%s\n", message);
         return DATA;
     }
-
-    DATA.valid = 'Y';
-    printf("%s\n", message);
     return DATA;
 }
 
@@ -739,6 +774,7 @@ int main() {
         }
         printData(DATA);
         print2DGRAPH(GRAPH->root, GRAPH->nil);
+        graph_walk(GRAPH->root, GRAPH->nil);
     }
     return 0;
 }
