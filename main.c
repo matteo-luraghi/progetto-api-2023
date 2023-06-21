@@ -1,6 +1,6 @@
 #include<stdio.h>
 #include<stdlib.h>
-#define COMMAND_LENGTH 1024
+#define COMMAND_LENGTH 1000000
 #define AGGIUNGI_AUTO '1'
 #define ROTTAMA_AUTO '2'
 #define AGGIUNGI_STAZIONE '3'
@@ -371,22 +371,37 @@ void graph_find_reachable(nodo_grafo_t* curr, nodo_grafo_t* modified, nodo_grafo
             tree_insert(curr->stazione->nodi_ragg, modified->stazione->distanza);
         }
     }
-    else if(command == DEMOLISCI_STAZIONE) {
-
-    }    
+      
     else if(command == ROTTAMA_AUTO) {
-        nodo_albero_t* deleted = NULL;
-        if(curr->stazione->distanza > modified->stazione->distanza && curr->stazione->distanza - modified->stazione->distanza > modified->stazione->max) {
-            deleted = rb_delete(modified->stazione->nodi_ragg, curr->stazione->distanza);
+        if(curr->stazione->distanza > modified->stazione->distanza) {
+            distanza_modulo = curr->stazione->distanza - modified->stazione->distanza;
+        } 
+        else if(modified->stazione->distanza > curr->stazione->distanza) {
+            distanza_modulo = modified->stazione->distanza - curr->stazione->distanza;
         }
-        if(modified->stazione->distanza > curr->stazione->distanza && modified->stazione->distanza - curr->stazione->distanza > curr->stazione->max) {
-            deleted = rb_delete(curr->stazione->nodi_ragg, modified->stazione->distanza);
+        
+        if(distanza_modulo != 0 && distanza_modulo > modified->stazione->max) {
+            rb_delete(modified->stazione->nodi_ragg, curr->stazione->distanza);
         }
-        free(deleted);
+        if(distanza_modulo != 0 && distanza_modulo > curr->stazione->max) {
+            rb_delete(curr->stazione->nodi_ragg, modified->stazione->distanza);
+        }
     } 
 
     if(curr->right != NIL) {        
         graph_find_reachable(curr->right, modified, NIL, command);
+    }
+}
+
+void graph_find_reachable_demolished(nodo_grafo_t* curr, int distanza, nodo_grafo_t* NIL) {
+    if(curr->left != NIL) {  
+        graph_find_reachable_demolished(curr->left, distanza, NIL);
+    }
+    if(tree_search(curr->stazione->nodi_ragg, curr->stazione->nodi_ragg->root, distanza) != curr->stazione->nodi_ragg->nil) {
+        rb_delete(curr->stazione->nodi_ragg, distanza);
+    } 
+    if(curr->right != NIL) {  
+        graph_find_reachable_demolished(curr->right, distanza, NIL);
     }
 }
 
@@ -699,7 +714,7 @@ int update_graph(grafo_t* GRAPH, char command_text[], char command, int command_
             graph_insert(GRAPH, station_distance);
         }
         else {
-            printf("non aggiunga\n");
+            printf("non aggiunta\n");
             return 0;
         }
     }
@@ -707,8 +722,8 @@ int update_graph(grafo_t* GRAPH, char command_text[], char command, int command_
     else if(command == DEMOLISCI_STAZIONE) {
         if(graph_search(GRAPH, GRAPH->root, station_distance) != GRAPH->nil) {
             nodo_grafo_t* deleted = graph_delete(GRAPH, station_distance);
-            graph_find_reachable(GRAPH->root, deleted, GRAPH->nil, DEMOLISCI_STAZIONE);
             free(deleted);
+            graph_find_reachable_demolished(GRAPH->root, station_distance, GRAPH->nil);
             printf("demolita\n");
         }
         else {
@@ -727,21 +742,34 @@ int update_graph(grafo_t* GRAPH, char command_text[], char command, int command_
 
     if(command == ROTTAMA_AUTO) {
         nodo_grafo_t* current_station = graph_search(GRAPH, GRAPH->root, station_distance);
-        int prev_max = current_station->stazione->max;
-        nodo_albero_t* deleted_auto = rb_delete(current_station->stazione, command_number);
-        if(deleted_auto->data == prev_max) {
-            graph_find_reachable(GRAPH->root, current_station, GRAPH->nil, ROTTAMA_AUTO);
+        if(current_station != GRAPH->nil) {
+            int prev_max = current_station->stazione->max;
+            if(tree_search(current_station->stazione, current_station->stazione->root, command_number) != current_station->stazione->nil) {
+                nodo_albero_t* deleted_auto = rb_delete(current_station->stazione, command_number);
+                if(deleted_auto->data == prev_max) {
+                    graph_find_reachable(GRAPH->root, current_station, GRAPH->nil, ROTTAMA_AUTO);
+                }
+                free(deleted_auto);
+                printf("rottamata\n");
+                return 0;
+            }    
         }
-        free(deleted_auto);
+        printf("non rottamata\n");
         return 0;
     }
 
     else if(command == AGGIUNGI_AUTO) {
         nodo_grafo_t* current_station = graph_search(GRAPH, GRAPH->root, station_distance);
-        int prev_max = current_station->stazione->max;
-        tree_insert(current_station->stazione, command_number);
-        if(current_station->stazione->max != prev_max) {
-            graph_find_reachable(GRAPH->root, current_station, GRAPH->nil, AGGIUNGI_AUTO);
+        if(current_station != GRAPH->nil) {
+            int prev_max = current_station->stazione->max;
+            tree_insert(current_station->stazione, command_number);
+            if(current_station->stazione->max != prev_max) {
+                graph_find_reachable(GRAPH->root, current_station, GRAPH->nil, AGGIUNGI_AUTO);
+            }
+            printf("aggiunta\n");
+        }
+        else {
+            printf("non aggiunta\n");
         }
         return 0;
     }
@@ -807,10 +835,13 @@ int main() {
         else if(string_compare(command, "demolisci-stazione", 17) == 1) {
             dataret = update_graph(GRAPH,command, DEMOLISCI_STAZIONE, 19);
         }
+        else if(string_compare(command, "pianifica-percorso", 17) == 1) {
+            printf("not yet\n");
+        }
         if(dataret == 0) {
             //print2DGRAPH(GRAPH->root, GRAPH->nil);
-            graph_walk_print(GRAPH->root, GRAPH->nil);
-            printf("------------------------------------------------------------\n");
+            //graph_walk_print(GRAPH->root, GRAPH->nil);
+            //printf("------------------------------------------------------------\n");
         }
         else {
             printf("Error\n");
