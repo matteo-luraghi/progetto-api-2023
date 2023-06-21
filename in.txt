@@ -1,11 +1,8 @@
-aggiungi-stazione 10 1 2
-aggiungi-stazione 20 3 45 5 56
-aggiungi-stazione 5 2 2 23
-demolisci-stazione 10
-demolisci-stazione 30
-aggiungi-stazione 1 2 2 23
-rottama-auto 1 2
-aggiungi-auto 5 4
-aggiungi-auto 5 4
-aggiungi-stazione 2 3 2 2 23
-rottama-auto 20 56
+aggiungi-stazione 91 9 5 4 5 5 4 6 5 4 5
+aggiungi-stazione 24 6 5 4 5 4 4 5
+aggiungi-stazione 92 6 5 4 4 5 5 5
+demolisci-stazione 59
+aggiungi-stazione 52 9 13 14 13 17 17 15 18 15 16
+aggiungi-auto 91 39
+aggiungi-auto 52 39
+aggiungi-auto 24 28

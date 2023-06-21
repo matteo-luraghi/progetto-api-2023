@@ -18,7 +18,7 @@ typedef struct nodo_albero {
 typedef struct albero {
     nodo_albero_t* root;                //albero delle macchine
     nodo_albero_t* nil;
-    struct albero *nodi_ragg;    //albero dei nodi raggiungibili
+    struct albero* nodi_ragg;    //albero dei nodi raggiungibili
     int max;
     int distanza;
 } stazione_t;
@@ -348,6 +348,48 @@ nodo_albero_t* rb_delete(stazione_t* T, int data) {
     return y;
 }
 
+void graph_find_reachable(nodo_grafo_t* curr, nodo_grafo_t* modified, nodo_grafo_t* NIL, char command) {
+    if(curr->left != NIL) {  
+        graph_find_reachable(curr->left, modified, NIL, command);
+    }
+    int distanza_modulo = 0;
+        
+    if(command == AGGIUNGI_STAZIONE || command == AGGIUNGI_AUTO){
+
+        if(curr->stazione->distanza > modified->stazione->distanza) {
+            distanza_modulo = curr->stazione->distanza - modified->stazione->distanza;
+        }
+
+        else if(modified->stazione->distanza > curr->stazione->distanza) {
+            distanza_modulo = modified->stazione->distanza - curr->stazione->distanza;
+        }
+
+        if(distanza_modulo != 0 && distanza_modulo <= modified->stazione->max && tree_search(modified->stazione->nodi_ragg, modified->stazione->nodi_ragg->root, curr->stazione->distanza)==modified->stazione->nodi_ragg->nil) {
+            tree_insert(modified->stazione->nodi_ragg, curr->stazione->distanza);
+        }
+        if(distanza_modulo != 0 && distanza_modulo <= curr->stazione->max && tree_search(curr->stazione->nodi_ragg, curr->stazione->nodi_ragg->root, modified->stazione->distanza)==curr->stazione->nodi_ragg->nil) {
+            tree_insert(curr->stazione->nodi_ragg, modified->stazione->distanza);
+        }
+    }
+    else if(command == DEMOLISCI_STAZIONE) {
+
+    }    
+    else if(command == ROTTAMA_AUTO) {
+        nodo_albero_t* deleted = NULL;
+        if(curr->stazione->distanza > modified->stazione->distanza && curr->stazione->distanza - modified->stazione->distanza > modified->stazione->max) {
+            deleted = rb_delete(modified->stazione->nodi_ragg, curr->stazione->distanza);
+        }
+        if(modified->stazione->distanza > curr->stazione->distanza && modified->stazione->distanza - curr->stazione->distanza > curr->stazione->max) {
+            deleted = rb_delete(curr->stazione->nodi_ragg, modified->stazione->distanza);
+        }
+        free(deleted);
+    } 
+
+    if(curr->right != NIL) {        
+        graph_find_reachable(curr->right, modified, NIL, command);
+    }
+}
+
 nodo_grafo_t* graph_search(grafo_t* GRAPH, nodo_grafo_t* x, int stazione) {
     if(x == GRAPH->nil || stazione == x->stazione->distanza) {
         return x;
@@ -443,6 +485,10 @@ void graph_insert(grafo_t* GRAPH, int stazione) {
     z->stazione->root = z->stazione->nil;
     z->stazione->distanza = stazione;
     z->stazione->max = 0;
+    z->stazione->nodi_ragg = malloc(sizeof(stazione_t));
+    z->stazione->nodi_ragg->nil = malloc(sizeof(nodo_albero_t));
+    z->stazione->nodi_ragg->nil->color = 'B';
+    z->stazione->nodi_ragg->root = z->stazione->nodi_ragg->nil;
 
     nodo_grafo_t* y = GRAPH->nil;
     nodo_grafo_t* x = GRAPH->root;
@@ -606,12 +652,12 @@ void print2DGRAPH(nodo_grafo_t* root, nodo_grafo_t* NIL){
     print2DUtilGraph(root, 0, NIL);
 }
 
-void graph_walk(nodo_grafo_t* x, nodo_grafo_t* NIL) {
+void graph_walk_print(nodo_grafo_t* x, nodo_grafo_t* NIL) {
     if(x != NIL) {
-        graph_walk(x->left, NIL);
+        graph_walk_print(x->left, NIL);
         printf("Albero: %d, max: %d\n", x->stazione->distanza, x->stazione->max);
-        print2DTree(x->stazione->root, x->stazione->nil);
-        graph_walk(x->right, NIL);
+        print2DTree(x->stazione->nodi_ragg->root, x->stazione->nodi_ragg->nil);
+        graph_walk_print(x->right, NIL);
     }
 }
 //-------------------------------------------------------
@@ -636,7 +682,7 @@ int string_len(char a[]) {
     return i+1;
 }
 
-int update_graph(grafo_t* GRAPH, char command_text[], char command, int command_len, char message[]) {
+int update_graph(grafo_t* GRAPH, char command_text[], char command, int command_len) {
     int i, j, k = 0, count = 0;
     char station_distance_str[10], command_number_str[10];
     int len = string_len(command_text);
@@ -648,14 +694,28 @@ int update_graph(grafo_t* GRAPH, char command_text[], char command, int command_
 
     int station_distance = atoi(station_distance_str);
 
-    if(command == AGGIUNGI_STAZIONE && graph_search(GRAPH, GRAPH->root, station_distance) == GRAPH->nil) {
-        graph_insert(GRAPH, station_distance);
+    if(command == AGGIUNGI_STAZIONE) {
+        if(graph_search(GRAPH, GRAPH->root, station_distance) == GRAPH->nil) {
+            graph_insert(GRAPH, station_distance);
+        }
+        else {
+            printf("non aggiunga\n");
+            return 0;
+        }
     }
-    else if(command == DEMOLISCI_STAZIONE && graph_search(GRAPH, GRAPH->root, station_distance) != GRAPH->nil) {
-        nodo_grafo_t* deleted = graph_delete(GRAPH, station_distance);
-        free(deleted);
+    
+    else if(command == DEMOLISCI_STAZIONE) {
+        if(graph_search(GRAPH, GRAPH->root, station_distance) != GRAPH->nil) {
+            nodo_grafo_t* deleted = graph_delete(GRAPH, station_distance);
+            graph_find_reachable(GRAPH->root, deleted, GRAPH->nil, DEMOLISCI_STAZIONE);
+            free(deleted);
+            printf("demolita\n");
+        }
+        else {
+            printf("non demolita\n");
+        }
         return 0;
-    }
+    } 
 
     count = 0;
     for(j = i + 1 ; j < len && command_text[j] != ' '; j++) {
@@ -667,16 +727,25 @@ int update_graph(grafo_t* GRAPH, char command_text[], char command, int command_
 
     if(command == ROTTAMA_AUTO) {
         nodo_grafo_t* current_station = graph_search(GRAPH, GRAPH->root, station_distance);
+        int prev_max = current_station->stazione->max;
         nodo_albero_t* deleted_auto = rb_delete(current_station->stazione, command_number);
+        if(deleted_auto->data == prev_max) {
+            graph_find_reachable(GRAPH->root, current_station, GRAPH->nil, ROTTAMA_AUTO);
+        }
         free(deleted_auto);
         return 0;
     }
 
     else if(command == AGGIUNGI_AUTO) {
         nodo_grafo_t* current_station = graph_search(GRAPH, GRAPH->root, station_distance);
+        int prev_max = current_station->stazione->max;
         tree_insert(current_station->stazione, command_number);
+        if(current_station->stazione->max != prev_max) {
+            graph_find_reachable(GRAPH->root, current_station, GRAPH->nil, AGGIUNGI_AUTO);
+        }
         return 0;
     }
+
     else if(command == AGGIUNGI_STAZIONE) {
         nodo_grafo_t* current_station = graph_search(GRAPH, GRAPH->root, station_distance);
         count = 0;
@@ -696,7 +765,7 @@ int update_graph(grafo_t* GRAPH, char command_text[], char command, int command_
                 data = atoi(data_str);
                 tree_insert(current_station->stazione, data);
                 if(data == 0) {
-                    printf("non %s\n", message);
+                    printf("non aggiunta\n");
                     return 0;
                 }
                 free(data_str);
@@ -706,12 +775,13 @@ int update_graph(grafo_t* GRAPH, char command_text[], char command, int command_
                 count++;
             }
         }
+        graph_find_reachable(GRAPH->root, current_station, GRAPH->nil, AGGIUNGI_STAZIONE);
         if(count != command_number) {
-            printf("non %s\n", message);
+            printf("non aggiunta\n");
             return 0;
         }
 
-        printf("%s\n", message);
+        printf("aggiunta\n");
         return 0;
     }
     return 1;
@@ -726,20 +796,21 @@ int main() {
     while (fgets(command, COMMAND_LENGTH, stdin)!=NULL) {
         int dataret = 0;
         if(string_compare(command, "aggiungi-auto", 12) == 1) {
-            dataret = update_graph(GRAPH,command, AGGIUNGI_AUTO, 14,"aggiunta");
+            dataret = update_graph(GRAPH,command, AGGIUNGI_AUTO, 14);
         }
         else if(string_compare(command, "rottama-auto", 11) == 1) {
-            dataret = update_graph(GRAPH,command, ROTTAMA_AUTO, 13,"rottamata");
+            dataret = update_graph(GRAPH,command, ROTTAMA_AUTO, 13);
         }
         else if(string_compare(command, "aggiungi-stazione", 16) == 1) {
-            dataret = update_graph(GRAPH,command, AGGIUNGI_STAZIONE, 18,"aggiunta");
+            dataret = update_graph(GRAPH,command, AGGIUNGI_STAZIONE, 18);
         }
         else if(string_compare(command, "demolisci-stazione", 17) == 1) {
-            dataret = update_graph(GRAPH,command, DEMOLISCI_STAZIONE, 19,"demolita");
+            dataret = update_graph(GRAPH,command, DEMOLISCI_STAZIONE, 19);
         }
         if(dataret == 0) {
-            print2DGRAPH(GRAPH->root, GRAPH->nil);
-            graph_walk(GRAPH->root, GRAPH->nil);
+            //print2DGRAPH(GRAPH->root, GRAPH->nil);
+            graph_walk_print(GRAPH->root, GRAPH->nil);
+            printf("------------------------------------------------------------\n");
         }
         else {
             printf("Error\n");
