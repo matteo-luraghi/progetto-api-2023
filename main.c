@@ -5,8 +5,20 @@
 #define ROTTAMA_AUTO '2'
 #define AGGIUNGI_STAZIONE '3'
 #define DEMOLISCI_STAZIONE '4'
+#define MAGGIORE '>'
+#define MINORE '<'
 //----------------------------------------------------
 //DATA STRUCTURE AND FUNCTIONS
+typedef struct nodo_lista {
+    int el;
+    struct nodo_lista *next;
+} nodo_lista_t;
+
+typedef struct lista {
+    struct nodo_lista* head;
+    struct nodo_lista* tail;
+} lista_t;
+
 typedef struct nodo_albero {
     struct nodo_albero *right;
     struct nodo_albero *left;
@@ -29,12 +41,54 @@ typedef struct nodo_grafo {
     struct nodo_grafo *p;
     stazione_t* stazione;
     char color;
+    char visited;
 } nodo_grafo_t;
 
 typedef struct grafo {
     nodo_grafo_t* root;  
     nodo_grafo_t* nil;     
 } grafo_t;
+
+void list_insert_head(lista_t* l, int el) {
+    nodo_lista_t* temp = malloc(sizeof(nodo_lista_t));
+    temp->el = el;
+    if(l->head == NULL) {
+        l->tail = temp;
+    }
+    temp->next = l->head;
+    l->head = temp;
+}
+
+void list_insert_tail(lista_t* l, int el) {
+    nodo_lista_t* temp = malloc(sizeof(nodo_lista_t));
+    if(l->head == NULL) {
+        list_insert_head(l ,el);
+    }
+    else {
+        temp->el = el;
+        temp->next = NULL;
+        if(l->tail != NULL) {
+            l->tail->next = temp;
+        }
+        l->tail = temp; 
+    }
+}
+
+void print_list(nodo_lista_t* x) {
+    while (x != NULL) {
+        printf("%d ", x->el);
+        x = x->next;
+    } printf("\n");
+}
+
+int sum_list(nodo_lista_t* x) {
+    int sum = 0;
+    while (x != NULL) {
+        sum = sum + x->el;
+        x = x->next;
+    } 
+    return sum;
+}
 
 nodo_albero_t* tree_search(stazione_t* T, nodo_albero_t* x, int data) {
     if(x == T->nil || data == x->data) {
@@ -206,7 +260,6 @@ void rb_insert_fixup(stazione_t* T, nodo_albero_t* z) {
 }
 
 void tree_insert(stazione_t* T, int data) {
-    //update the max
     if(data > T->max) {
         T->max = data;
     }
@@ -494,6 +547,7 @@ void graph_insert_fixup(grafo_t* GRAPH, nodo_grafo_t* z) {
 
 void graph_insert(grafo_t* GRAPH, int stazione) {
     nodo_grafo_t* z = malloc(sizeof(nodo_grafo_t));
+    z->visited = 'F';
     z->stazione = malloc(sizeof(stazione_t));
     z->stazione->nil = malloc(sizeof(nodo_albero_t));
     z->stazione->nil->color = 'B';
@@ -679,14 +733,14 @@ void graph_walk_print(nodo_grafo_t* x, nodo_grafo_t* NIL) {
 
 //----------------------------------------------------
 
-int string_compare(char a[], char b[], int len) {
+char string_compare(char a[], char b[], int len) {
     int i;
     for(i=0; i<len; i++) {
         if(a[i] != b[i]) { 
-            return 0;
+            return '0';
         }
     }
-    return 1;
+    return '1';
 }
 
 int string_len(char a[]) {
@@ -815,6 +869,11 @@ int update_graph(grafo_t* GRAPH, char command_text[], char command, int command_
     return 1;
 }
 
+
+void pianifica_percorso(grafo_t* GRAPH, nodo_grafo_t* start, int start_num, int end, char direzione) {
+    
+} 
+
 int main() {
     grafo_t* GRAPH = malloc(sizeof(grafo_t));
     GRAPH->nil = malloc(sizeof(nodo_grafo_t));
@@ -823,28 +882,46 @@ int main() {
     char command[COMMAND_LENGTH];
     while (fgets(command, COMMAND_LENGTH, stdin)!=NULL) {
         int dataret = 0;
-        if(string_compare(command, "aggiungi-auto", 12) == 1) {
+        if(string_compare(command, "aggiungi-auto", 12) == '1') {
             dataret = update_graph(GRAPH,command, AGGIUNGI_AUTO, 14);
         }
-        else if(string_compare(command, "rottama-auto", 11) == 1) {
+        else if(string_compare(command, "rottama-auto", 11) == '1') {
             dataret = update_graph(GRAPH,command, ROTTAMA_AUTO, 13);
         }
-        else if(string_compare(command, "aggiungi-stazione", 16) == 1) {
+        else if(string_compare(command, "aggiungi-stazione", 16) == '1') {
             dataret = update_graph(GRAPH,command, AGGIUNGI_STAZIONE, 18);
         }
-        else if(string_compare(command, "demolisci-stazione", 17) == 1) {
+        else if(string_compare(command, "demolisci-stazione", 17) == '1') {
             dataret = update_graph(GRAPH,command, DEMOLISCI_STAZIONE, 19);
         }
-        else if(string_compare(command, "pianifica-percorso", 17) == 1) {
-            printf("not yet\n");
+        else if(string_compare(command, "pianifica-percorso", 17) == '1') {
+            char start_str[30], end_str[30];
+            int len = string_len(command), i, j=0, k, l=0;
+            for(i = 19; i<len && command[i] != ' '; i++) {
+                start_str[j] = command[i];
+                j++;
+            } 
+            for(k= i+1; k<len; k++) {
+                end_str[l] = command[k];
+                l++;
+            }
+            nodo_grafo_t* station_start = graph_search(GRAPH, GRAPH->root, atoi(start_str));
+
+            if(atoi(end_str) > atoi(start_str)) {
+                pianifica_percorso(GRAPH, station_start, atoi(start_str), atoi(end_str), MAGGIORE);
+            }
+            else {
+                pianifica_percorso(GRAPH, station_start, atoi(start_str), atoi(end_str), MINORE);
+            }
         }
-        if(dataret == 0) {
+        //you can cancel this later
+        if(dataret != 0) {
+            printf("Errore\n");
+        }
+        else {
             //print2DGRAPH(GRAPH->root, GRAPH->nil);
             //graph_walk_print(GRAPH->root, GRAPH->nil);
             //printf("------------------------------------------------------------\n");
-        }
-        else {
-            printf("Error\n");
         }
     }
     return 0;
