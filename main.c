@@ -5,19 +5,23 @@
 #define ROTTAMA_AUTO '2'
 #define AGGIUNGI_STAZIONE '3'
 #define DEMOLISCI_STAZIONE '4'
-#define MAGGIORE '>'
-#define MINORE '<'
 //----------------------------------------------------
 //DATA STRUCTURE AND FUNCTIONS
 typedef struct nodo_lista {
     int el;
     struct nodo_lista *next;
+    struct nodo_lista *prev;
 } nodo_lista_t;
 
 typedef struct lista {
     struct nodo_lista* head;
     struct nodo_lista* tail;
+    struct lista* next;
 } lista_t;
+
+typedef struct lista_liste {
+    lista_t* head;
+} lista_liste_t;
 
 typedef struct nodo_albero {
     struct nodo_albero *right;
@@ -52,25 +56,25 @@ typedef struct grafo {
 void list_insert_head(lista_t* l, int el) {
     nodo_lista_t* temp = malloc(sizeof(nodo_lista_t));
     temp->el = el;
-    if(l->head == NULL) {
+    temp->next = l->head;
+    temp->prev = NULL;
+    l->head = temp;
+    if(l->tail == NULL) {
         l->tail = temp;
     }
-    temp->next = l->head;
-    l->head = temp;
 }
 
 void list_insert_tail(lista_t* l, int el) {
-    nodo_lista_t* temp = malloc(sizeof(nodo_lista_t));
     if(l->head == NULL) {
-        list_insert_head(l ,el);
+        list_insert_head(l, el);
     }
     else {
+        nodo_lista_t* temp = malloc(sizeof(nodo_lista_t));
         temp->el = el;
         temp->next = NULL;
-        if(l->tail != NULL) {
-            l->tail->next = temp;
-        }
-        l->tail = temp; 
+        temp->prev = l->tail;
+        temp->prev->next = temp;
+        l->tail = temp;
     }
 }
 
@@ -81,13 +85,36 @@ void print_list(nodo_lista_t* x) {
     } printf("\n");
 }
 
-int sum_list(nodo_lista_t* x) {
-    int sum = 0;
-    while (x != NULL) {
-        sum = sum + x->el;
+void print_list_backwards(nodo_lista_t* x) {
+    while(x != NULL) {
+        printf("%d ", x->el);
+        x = x->prev;
+    } printf("\n");
+}
+
+void list_list_insert_head(lista_liste_t* l, lista_t* el) {
+    el->next = l->head;
+    l->head = el;
+}
+
+lista_t* copy_list(nodo_lista_t* curr) {
+    lista_t* copied = malloc(sizeof(lista_t));
+    copied->head = NULL;
+    copied->tail = NULL;
+    while(curr != NULL) {
+        list_insert_tail(copied, curr->el);
+        curr = curr->next;
+    }
+    return copied;
+}
+
+int list_length(nodo_lista_t* x) {
+    int count = 0;
+    while( x != NULL) {
+        count++;
         x = x->next;
-    } 
-    return sum;
+    }
+    return count;
 }
 
 nodo_albero_t* tree_search(stazione_t* T, nodo_albero_t* x, int data) {
@@ -547,7 +574,6 @@ void graph_insert_fixup(grafo_t* GRAPH, nodo_grafo_t* z) {
 
 void graph_insert(grafo_t* GRAPH, int stazione) {
     nodo_grafo_t* z = malloc(sizeof(nodo_grafo_t));
-    z->visited = 'F';
     z->stazione = malloc(sizeof(stazione_t));
     z->stazione->nil = malloc(sizeof(nodo_albero_t));
     z->stazione->nil->color = 'B';
@@ -556,6 +582,7 @@ void graph_insert(grafo_t* GRAPH, int stazione) {
     z->stazione->max = 0;
     z->stazione->nodi_ragg = malloc(sizeof(stazione_t));
     z->stazione->nodi_ragg->nil = malloc(sizeof(nodo_albero_t));
+    z->stazione->nodi_ragg->nil->data = -1;
     z->stazione->nodi_ragg->nil->color = 'B';
     z->stazione->nodi_ragg->root = z->stazione->nodi_ragg->nil;
 
@@ -725,6 +752,9 @@ void graph_walk_print(nodo_grafo_t* x, nodo_grafo_t* NIL) {
     if(x != NIL) {
         graph_walk_print(x->left, NIL);
         printf("Albero: %d, max: %d\n", x->stazione->distanza, x->stazione->max);
+        printf("Macchine:\n");
+        print2DTree(x->stazione->root, x->stazione->nil);
+        printf("Nodi Ragg:\n");
         print2DTree(x->stazione->nodi_ragg->root, x->stazione->nodi_ragg->nil);
         graph_walk_print(x->right, NIL);
     }
@@ -869,10 +899,97 @@ int update_graph(grafo_t* GRAPH, char command_text[], char command, int command_
     return 1;
 }
 
+void whiten(grafo_t* GRAPH, nodo_grafo_t* x) {
+    if(x != GRAPH->nil) {
+        whiten(GRAPH, x->left);
+    }
 
-void pianifica_percorso(grafo_t* GRAPH, nodo_grafo_t* start, int start_num, int end, char direzione) {
-    
+    x->visited = 'W';
+
+    if(x != GRAPH->nil) {
+        whiten(GRAPH, x->right);
+    }
+}
+
+void cerca_per_vicini(grafo_t* GRAPH, nodo_albero_t* curr, int start, int end, lista_t* road, lista_liste_t* percorsi) {
+    if(curr->data != -1) {
+        nodo_grafo_t* curr_grafo = graph_search(GRAPH, GRAPH->root, curr->data);
+        if(curr->data == end) {
+            list_insert_tail(road, end);
+
+            if(percorsi->head != NULL && list_length(percorsi->head->head) > list_length(road->head)) {
+                free(percorsi->head);
+                percorsi->head = NULL;
+            }
+
+            list_list_insert_head(percorsi, road);
+        }
+
+        if(curr_grafo->visited == 'W' && curr->data > road->tail->el) {
+            lista_t* temp = copy_list(road->head);
+            list_insert_tail(temp, curr->data);
+            curr_grafo->visited = 'B';
+            cerca_per_vicini(GRAPH, curr_grafo->stazione->nodi_ragg->root, start, end, temp, percorsi);
+        }
+
+        cerca_per_vicini(GRAPH, curr->left, start, end, road, percorsi);
+        cerca_per_vicini(GRAPH, curr->right, start, end, road, percorsi);
+    }
+}
+
+void percorso_fixup(lista_t* percorso, grafo_t* GRAPH) {
+    nodo_lista_t* x = percorso->head;
+    while(x != NULL) {
+        nodo_grafo_t* curr = graph_search(GRAPH, GRAPH->root, x->el);
+        if(x->next != NULL) {
+            nodo_lista_t* y = x->next->next;
+            while(y != NULL) {
+                if(tree_search(curr->stazione->nodi_ragg, curr->stazione->nodi_ragg->root, y->el) != curr->stazione->nodi_ragg->nil) {
+                    nodo_lista_t* temp = y->prev->prev;
+                    while(temp != x && temp != NULL) {
+                        free(temp->next);
+                        temp = temp->prev;
+                    }
+                    x->next = y;
+                    y->prev = x;
+                }
+                y = y->next;
+            }
+            x = x->next;
+        }
+        else {
+            x = NULL;
+        }
+    }
+}
+
+lista_t* pianifica_percorso(grafo_t* GRAPH, int start, int end) {
+    whiten(GRAPH, GRAPH->root);
+    nodo_grafo_t* station_start = graph_search(GRAPH, GRAPH->root, start);
+    nodo_grafo_t* station_end = graph_search(GRAPH, GRAPH->root, end);
+    if(station_start == GRAPH->nil || station_end == GRAPH->nil) {
+        return NULL;
+    }
+    lista_liste_t* percorsi = malloc(sizeof(lista_liste_t));
+    percorsi->head = NULL;
+    lista_t* start_list = malloc(sizeof(lista_t));
+    start_list->head = NULL;
+    start_list->tail = NULL;
+    list_insert_head(start_list, start);
+    cerca_per_vicini(GRAPH, station_start->stazione->nodi_ragg->root, start, end, start_list, percorsi);
+    if(percorsi->head != NULL) {
+        lista_t* a = percorsi->head;
+        //
+        a = NULL;
+        while(a != NULL) {
+            print_list(a->head);
+            a = a->next;
+        }
+        percorso_fixup(percorsi->head, GRAPH);
+    }
+    return percorsi->head;
 } 
+
 
 int main() {
     grafo_t* GRAPH = malloc(sizeof(grafo_t));
@@ -901,20 +1018,32 @@ int main() {
                 start_str[j] = command[i];
                 j++;
             } 
+            start_str[j] = '\0';
             for(k= i+1; k<len; k++) {
                 end_str[l] = command[k];
                 l++;
             }
-            nodo_grafo_t* station_start = graph_search(GRAPH, GRAPH->root, atoi(start_str));
-
+            end_str[l] = '\0';
             if(atoi(end_str) > atoi(start_str)) {
-                pianifica_percorso(GRAPH, station_start, atoi(start_str), atoi(end_str), MAGGIORE);
-            }
+                lista_t* l = pianifica_percorso(GRAPH, atoi(start_str), atoi(end_str));
+                if(l == NULL) {
+                    printf("nessun percorso\n");
+                }
+                else {
+                    print_list(l->head);
+                }
+            }    
             else {
-                pianifica_percorso(GRAPH, station_start, atoi(start_str), atoi(end_str), MINORE);
+                lista_t* l = pianifica_percorso(GRAPH, atoi(end_str), atoi(start_str));
+                if(l == NULL) {
+                    printf("nessun percorso\n");
+                }
+                else {
+                    print_list_backwards(l->tail);
+                }
             }
         }
-        //you can cancel this later
+
         if(dataret != 0) {
             printf("Errore\n");
         }
