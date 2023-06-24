@@ -1,0 +1,6 @@
+aggiungi-stazione 1 1 1
+aggiungi-stazione 2 1 9
+aggiungi-stazione 5 1 6
+aggiungi-stazione 10 1 12
+aggiungi-stazione 20 1 9
+pianifica-percorso 2 20;
