@@ -1,12 +1,11 @@
 #include<stdio.h>
 #include<stdlib.h>
-#define COMMAND_LENGTH 1000000
+#define COMMAND_LENGTH 1000
 #define AGGIUNGI_AUTO '1'
 #define ROTTAMA_AUTO '2'
 #define AGGIUNGI_STAZIONE '3'
 #define DEMOLISCI_STAZIONE '4'
-//----------------------------------------------------
-//DATA STRUCTURE AND FUNCTIONS
+
 typedef struct nodo_lista {
     int el;
     struct nodo_lista *next;
@@ -19,10 +18,6 @@ typedef struct lista {
     struct lista* next;
 } lista_t;
 
-typedef struct lista_liste {
-    lista_t* head;
-} lista_liste_t;
-
 typedef struct nodo_albero {
     struct nodo_albero *right;
     struct nodo_albero *left;
@@ -32,9 +27,8 @@ typedef struct nodo_albero {
 } nodo_albero_t;
 
 typedef struct albero {
-    nodo_albero_t* root;                //albero delle macchine
+    nodo_albero_t* root;                
     nodo_albero_t* nil;
-    struct albero* nodi_ragg;    //albero dei nodi raggiungibili
     int max;
     int distanza;
 } stazione_t;
@@ -80,41 +74,26 @@ void list_insert_tail(lista_t* l, int el) {
 
 void print_list(nodo_lista_t* x) {
     while (x != NULL) {
-        printf("%d ", x->el);
+        if(x->next != NULL) {
+            printf("%d ", x->el);
+        }
+        else {
+            printf("%d", x->el);
+        }
         x = x->next;
     } printf("\n");
 }
 
 void print_list_backwards(nodo_lista_t* x) {
     while(x != NULL) {
-        printf("%d ", x->el);
+        if(x->prev != NULL) {
+            printf("%d ", x->el);
+        }
+        else {
+            printf("%d", x->el);
+        }
         x = x->prev;
     } printf("\n");
-}
-
-void list_list_insert_head(lista_liste_t* l, lista_t* el) {
-    el->next = l->head;
-    l->head = el;
-}
-
-lista_t* copy_list(nodo_lista_t* curr) {
-    lista_t* copied = malloc(sizeof(lista_t));
-    copied->head = NULL;
-    copied->tail = NULL;
-    while(curr != NULL) {
-        list_insert_tail(copied, curr->el);
-        curr = curr->next;
-    }
-    return copied;
-}
-
-int list_length(nodo_lista_t* x) {
-    int count = 0;
-    while( x != NULL) {
-        count++;
-        x = x->next;
-    }
-    return count;
 }
 
 nodo_albero_t* tree_search(stazione_t* T, nodo_albero_t* x, int data) {
@@ -428,63 +407,6 @@ nodo_albero_t* rb_delete(stazione_t* T, int data) {
     return y;
 }
 
-void graph_find_reachable(nodo_grafo_t* curr, nodo_grafo_t* modified, nodo_grafo_t* NIL, char command) {
-    if(curr->left != NIL) {  
-        graph_find_reachable(curr->left, modified, NIL, command);
-    }
-    int distanza_modulo = 0;
-        
-    if(command == AGGIUNGI_STAZIONE || command == AGGIUNGI_AUTO){
-
-        if(curr->stazione->distanza > modified->stazione->distanza) {
-            distanza_modulo = curr->stazione->distanza - modified->stazione->distanza;
-        }
-
-        else if(modified->stazione->distanza > curr->stazione->distanza) {
-            distanza_modulo = modified->stazione->distanza - curr->stazione->distanza;
-        }
-
-        if(distanza_modulo != 0 && distanza_modulo <= modified->stazione->max && tree_search(modified->stazione->nodi_ragg, modified->stazione->nodi_ragg->root, curr->stazione->distanza)==modified->stazione->nodi_ragg->nil) {
-            tree_insert(modified->stazione->nodi_ragg, curr->stazione->distanza);
-        }
-        if(distanza_modulo != 0 && distanza_modulo <= curr->stazione->max && tree_search(curr->stazione->nodi_ragg, curr->stazione->nodi_ragg->root, modified->stazione->distanza)==curr->stazione->nodi_ragg->nil) {
-            tree_insert(curr->stazione->nodi_ragg, modified->stazione->distanza);
-        }
-    }
-      
-    else if(command == ROTTAMA_AUTO) {
-        if(curr->stazione->distanza > modified->stazione->distanza) {
-            distanza_modulo = curr->stazione->distanza - modified->stazione->distanza;
-        } 
-        else if(modified->stazione->distanza > curr->stazione->distanza) {
-            distanza_modulo = modified->stazione->distanza - curr->stazione->distanza;
-        }
-        
-        if(distanza_modulo != 0 && distanza_modulo > modified->stazione->max) {
-            rb_delete(modified->stazione->nodi_ragg, curr->stazione->distanza);
-        }
-        if(distanza_modulo != 0 && distanza_modulo > curr->stazione->max) {
-            rb_delete(curr->stazione->nodi_ragg, modified->stazione->distanza);
-        }
-    } 
-
-    if(curr->right != NIL) {        
-        graph_find_reachable(curr->right, modified, NIL, command);
-    }
-}
-
-void graph_find_reachable_demolished(nodo_grafo_t* curr, int distanza, nodo_grafo_t* NIL) {
-    if(curr->left != NIL) {  
-        graph_find_reachable_demolished(curr->left, distanza, NIL);
-    }
-    if(tree_search(curr->stazione->nodi_ragg, curr->stazione->nodi_ragg->root, distanza) != curr->stazione->nodi_ragg->nil) {
-        rb_delete(curr->stazione->nodi_ragg, distanza);
-    } 
-    if(curr->right != NIL) {  
-        graph_find_reachable_demolished(curr->right, distanza, NIL);
-    }
-}
-
 nodo_grafo_t* graph_search(grafo_t* GRAPH, nodo_grafo_t* x, int stazione) {
     if(x == GRAPH->nil || stazione == x->stazione->distanza) {
         return x;
@@ -580,11 +502,6 @@ void graph_insert(grafo_t* GRAPH, int stazione) {
     z->stazione->root = z->stazione->nil;
     z->stazione->distanza = stazione;
     z->stazione->max = 0;
-    z->stazione->nodi_ragg = malloc(sizeof(stazione_t));
-    z->stazione->nodi_ragg->nil = malloc(sizeof(nodo_albero_t));
-    z->stazione->nodi_ragg->nil->data = -1;
-    z->stazione->nodi_ragg->nil->color = 'B';
-    z->stazione->nodi_ragg->root = z->stazione->nodi_ragg->nil;
 
     nodo_grafo_t* y = GRAPH->nil;
     nodo_grafo_t* x = GRAPH->root;
@@ -709,60 +626,6 @@ nodo_grafo_t* graph_delete(grafo_t* T, int distanza) {
     return y;
 }
 
-//-------------------------------------------------------
-// TO REMOVE BEFORE UPLOAD
-#define COUNT 10
-void print2DUtilTree(nodo_albero_t* root, int space, nodo_albero_t* NIL){
-    if (root == NIL)
-        return;
-    space += COUNT;
-    print2DUtilTree(root->right, space, NIL);
-    printf("\n");
-    for (int i = COUNT; i < space; i++)
-        printf(" ");
-    printf("%d - %c\n", root->data, root->color);
-    print2DUtilTree(root->left, space, NIL);
-}
- 
-// Wrapper over print2DUtil()
-void print2DTree(nodo_albero_t* root, nodo_albero_t* NIL){
-    // Pass initial space count as 0
-    print2DUtilTree(root, 0, NIL);
-}
-///////////////////////////////////////////////////////////////
-void print2DUtilGraph(nodo_grafo_t* root, int space, nodo_grafo_t* NIL){
-    if (root == NIL)
-        return;
-    space += COUNT;
-    print2DUtilGraph(root->right, space, NIL);
-    printf("\n");
-    for (int i = COUNT; i < space; i++)
-        printf(" ");
-    printf("%d - %c\n", root->stazione->distanza, root->color);
-    print2DUtilGraph(root->left, space, NIL);
-}
- 
-// Wrapper over print2DUtilGraph()
-void print2DGRAPH(nodo_grafo_t* root, nodo_grafo_t* NIL){
-    // Pass initial space count as 0
-    print2DUtilGraph(root, 0, NIL);
-}
-
-void graph_walk_print(nodo_grafo_t* x, nodo_grafo_t* NIL) {
-    if(x != NIL) {
-        graph_walk_print(x->left, NIL);
-        printf("Albero: %d, max: %d\n", x->stazione->distanza, x->stazione->max);
-        printf("Macchine:\n");
-        print2DTree(x->stazione->root, x->stazione->nil);
-        printf("Nodi Ragg:\n");
-        print2DTree(x->stazione->nodi_ragg->root, x->stazione->nodi_ragg->nil);
-        graph_walk_print(x->right, NIL);
-    }
-}
-//-------------------------------------------------------
-
-//----------------------------------------------------
-
 char string_compare(char a[], char b[], int len) {
     int i;
     for(i=0; i<len; i++) {
@@ -807,7 +670,6 @@ int update_graph(grafo_t* GRAPH, char command_text[], char command, int command_
         if(graph_search(GRAPH, GRAPH->root, station_distance) != GRAPH->nil) {
             nodo_grafo_t* deleted = graph_delete(GRAPH, station_distance);
             free(deleted);
-            graph_find_reachable_demolished(GRAPH->root, station_distance, GRAPH->nil);
             printf("demolita\n");
         }
         else {
@@ -831,7 +693,6 @@ int update_graph(grafo_t* GRAPH, char command_text[], char command, int command_
             if(tree_search(current_station->stazione, current_station->stazione->root, command_number) != current_station->stazione->nil) {
                 nodo_albero_t* deleted_auto = rb_delete(current_station->stazione, command_number);
                 if(deleted_auto->data == prev_max) {
-                    graph_find_reachable(GRAPH->root, current_station, GRAPH->nil, ROTTAMA_AUTO);
                 }
                 free(deleted_auto);
                 printf("rottamata\n");
@@ -848,7 +709,6 @@ int update_graph(grafo_t* GRAPH, char command_text[], char command, int command_
             int prev_max = current_station->stazione->max;
             tree_insert(current_station->stazione, command_number);
             if(current_station->stazione->max != prev_max) {
-                graph_find_reachable(GRAPH->root, current_station, GRAPH->nil, AGGIUNGI_AUTO);
             }
             printf("aggiunta\n");
         }
@@ -876,10 +736,6 @@ int update_graph(grafo_t* GRAPH, char command_text[], char command, int command_
                 data_str[k] = '\0';
                 data = atoi(data_str);
                 tree_insert(current_station->stazione, data);
-                if(data == 0) {
-                    printf("non aggiunta\n");
-                    return 0;
-                }
                 free(data_str);
                 data_str = (char*)malloc(2*sizeof(char));
                 data_str[0] = '\0';
@@ -887,7 +743,6 @@ int update_graph(grafo_t* GRAPH, char command_text[], char command, int command_
                 count++;
             }
         }
-        graph_find_reachable(GRAPH->root, current_station, GRAPH->nil, AGGIUNGI_STAZIONE);
         if(count != command_number) {
             printf("non aggiunta\n");
             return 0;
@@ -898,98 +753,6 @@ int update_graph(grafo_t* GRAPH, char command_text[], char command, int command_
     }
     return 1;
 }
-
-void whiten(grafo_t* GRAPH, nodo_grafo_t* x) {
-    if(x != GRAPH->nil) {
-        whiten(GRAPH, x->left);
-    }
-
-    x->visited = 'W';
-
-    if(x != GRAPH->nil) {
-        whiten(GRAPH, x->right);
-    }
-}
-
-void cerca_per_vicini(grafo_t* GRAPH, nodo_albero_t* curr, int start, int end, lista_t* road, lista_liste_t* percorsi) {
-    if(curr->data != -1) {
-        nodo_grafo_t* curr_grafo = graph_search(GRAPH, GRAPH->root, curr->data);
-        if(curr->data == end) {
-            list_insert_tail(road, end);
-
-            if(percorsi->head != NULL && list_length(percorsi->head->head) > list_length(road->head)) {
-                free(percorsi->head);
-                percorsi->head = NULL;
-            }
-
-            list_list_insert_head(percorsi, road);
-        }
-
-        if(curr_grafo->visited == 'W' && curr->data > road->tail->el) {
-            lista_t* temp = copy_list(road->head);
-            list_insert_tail(temp, curr->data);
-            curr_grafo->visited = 'B';
-            cerca_per_vicini(GRAPH, curr_grafo->stazione->nodi_ragg->root, start, end, temp, percorsi);
-        }
-
-        cerca_per_vicini(GRAPH, curr->left, start, end, road, percorsi);
-        cerca_per_vicini(GRAPH, curr->right, start, end, road, percorsi);
-    }
-}
-
-void percorso_fixup(lista_t* percorso, grafo_t* GRAPH) {
-    nodo_lista_t* x = percorso->head;
-    while(x != NULL) {
-        nodo_grafo_t* curr = graph_search(GRAPH, GRAPH->root, x->el);
-        if(x->next != NULL) {
-            nodo_lista_t* y = x->next->next;
-            while(y != NULL) {
-                if(tree_search(curr->stazione->nodi_ragg, curr->stazione->nodi_ragg->root, y->el) != curr->stazione->nodi_ragg->nil) {
-                    nodo_lista_t* temp = y->prev->prev;
-                    while(temp != x && temp != NULL) {
-                        free(temp->next);
-                        temp = temp->prev;
-                    }
-                    x->next = y;
-                    y->prev = x;
-                }
-                y = y->next;
-            }
-            x = x->next;
-        }
-        else {
-            x = NULL;
-        }
-    }
-}
-
-lista_t* pianifica_percorso(grafo_t* GRAPH, int start, int end) {
-    whiten(GRAPH, GRAPH->root);
-    nodo_grafo_t* station_start = graph_search(GRAPH, GRAPH->root, start);
-    nodo_grafo_t* station_end = graph_search(GRAPH, GRAPH->root, end);
-    if(station_start == GRAPH->nil || station_end == GRAPH->nil) {
-        return NULL;
-    }
-    lista_liste_t* percorsi = malloc(sizeof(lista_liste_t));
-    percorsi->head = NULL;
-    lista_t* start_list = malloc(sizeof(lista_t));
-    start_list->head = NULL;
-    start_list->tail = NULL;
-    list_insert_head(start_list, start);
-    cerca_per_vicini(GRAPH, station_start->stazione->nodi_ragg->root, start, end, start_list, percorsi);
-    if(percorsi->head != NULL) {
-        lista_t* a = percorsi->head;
-        //
-        a = NULL;
-        while(a != NULL) {
-            print_list(a->head);
-            a = a->next;
-        }
-        percorso_fixup(percorsi->head, GRAPH);
-    }
-    return percorsi->head;
-} 
-
 
 int main() {
     grafo_t* GRAPH = malloc(sizeof(grafo_t));
@@ -1025,7 +788,8 @@ int main() {
             }
             end_str[l] = '\0';
             if(atoi(end_str) > atoi(start_str)) {
-                lista_t* l = pianifica_percorso(GRAPH, atoi(start_str), atoi(end_str));
+                //lista_t* l = pianifica_percorso(GRAPH, atoi(start_str), atoi(end_str), '>');
+                lista_t* l = NULL;
                 if(l == NULL) {
                     printf("nessun percorso\n");
                 }
@@ -1034,7 +798,8 @@ int main() {
                 }
             }    
             else {
-                lista_t* l = pianifica_percorso(GRAPH, atoi(end_str), atoi(start_str));
+                //lista_t* l = pianifica_percorso(GRAPH, atoi(end_str), atoi(start_str), '<');
+                lista_t* l = NULL;
                 if(l == NULL) {
                     printf("nessun percorso\n");
                 }
@@ -1046,11 +811,6 @@ int main() {
 
         if(dataret != 0) {
             printf("Errore\n");
-        }
-        else {
-            //print2DGRAPH(GRAPH->root, GRAPH->nil);
-            //graph_walk_print(GRAPH->root, GRAPH->nil);
-            //printf("------------------------------------------------------------\n");
         }
     }
     return 0;
