@@ -1,6 +1,6 @@
 #include<stdio.h>
 #include<stdlib.h>
-#define COMMAND_LENGTH 1000
+#define COMMAND_LENGTH 1000000
 #define AGGIUNGI_AUTO '1'
 #define ROTTAMA_AUTO '2'
 #define AGGIUNGI_STAZIONE '3'
