@@ -666,9 +666,9 @@ int update_graph(grafo_t* GRAPH, char command_text[], char command, int command_
         }
     }
     
-    else if(command == DEMOLISCI_STAZIONE) {
-        if(graph_search(GRAPH, GRAPH->root, station_distance) != GRAPH->nil) {
-            nodo_grafo_t* deleted = graph_delete(GRAPH, station_distance);
+    else if(command == DEMOLISCI_STAZIONE) {    
+        nodo_grafo_t* deleted = graph_delete(GRAPH, station_distance);
+        if(deleted != GRAPH->nil) {
             free(deleted);
             printf("demolita\n");
         }
