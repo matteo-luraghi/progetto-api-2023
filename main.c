@@ -778,16 +778,34 @@ int update_graph(grafo_t* GRAPH, char command_text[], char command, int command_
 }
 
 void whiten(grafo_t* GRAPH, nodo_grafo_t* x) {
-    if(x->left != GRAPH->nil) {
-        whiten(GRAPH, x->left);
-    }
+    nodo_grafo_t* curr;
+    nodo_grafo_t* prev;
 
-    x->visited = 'W';
-    x->distance = 2147483647;
-    x->predecessor = GRAPH->nil;
-
-    if(x->right != GRAPH->nil) {
-        whiten(GRAPH, x->right);
+    curr = x;
+    while(curr != GRAPH->nil) {
+        if(curr->left == GRAPH->nil) {
+            curr->visited = 'W';
+            curr->distance = 2147483647;
+            curr->predecessor = GRAPH->nil;
+            curr = curr->right;
+        }
+        else {
+            prev = curr->left;
+            while(prev->right != GRAPH->nil && prev->right != curr) {
+                prev = prev->right;
+            }
+            if(prev->right == GRAPH->nil) {
+                prev->right = curr;
+                curr = curr->left;
+            }
+            else {
+                prev->right = GRAPH->nil;
+                curr->visited = 'W';
+                curr->distance = 2147483647;
+                curr->predecessor = GRAPH->nil;
+                curr = curr->right;
+            }
+        }
     }
 }
 
