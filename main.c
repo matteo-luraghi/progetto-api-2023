@@ -41,6 +41,7 @@ typedef struct nodo_grafo {
     char color;
     char visited;
     int distance;
+    struct nodo_grafo* predecessor;
 } nodo_grafo_t;
 
 typedef struct grafo {
@@ -776,18 +777,17 @@ int update_graph(grafo_t* GRAPH, char command_text[], char command, int command_
     return 1;
 }
 
-void whiten(grafo_t* GRAPH, nodo_grafo_t* x, nodo_grafo_t* start) {
+void whiten(grafo_t* GRAPH, nodo_grafo_t* x) {
     if(x != GRAPH->nil) {
-        whiten(GRAPH, x->left, start);
+        whiten(GRAPH, x->left);
     }
 
-    if(x != start){
-        x->visited = 'W';
-        x->distance = -1;
-    }
+    x->visited = 'W';
+    x->distance = -1;
+    x->predecessor = GRAPH->nil;
 
     if(x != GRAPH->nil) {
-        whiten(GRAPH, x->right, start);
+        whiten(GRAPH, x->right);
     }
 }
 
@@ -809,7 +809,7 @@ void find_reachable(nodo_grafo_t* start, nodo_grafo_t* x, nodo_grafo_t* NIL, lis
 }
 
 void BFS(grafo_t* GRAPH, nodo_grafo_t* start, nodo_grafo_t* end, char direzione) {
-    whiten(GRAPH, GRAPH->root, start);
+    whiten(GRAPH, GRAPH->root);
     start->visited = 'G';
     start->distance = 0;
     lista_t* queue = malloc(sizeof(lista_t));
@@ -824,6 +824,12 @@ void BFS(grafo_t* GRAPH, nodo_grafo_t* start, nodo_grafo_t* end, char direzione)
             reachable->head = NULL;
             reachable->tail = NULL;
 
+            //idea to speed things up
+            nodo_grafo_t* start_search = curr_grafo;
+            while(start_search->p != GRAPH->nil && start_search->p->stazione->distanza > start_search->stazione->distanza) {
+                start_search = start_search->p;
+            }
+
             find_reachable(curr_grafo, GRAPH->root, GRAPH->nil, reachable, direzione);
             //printf("Nodo: %d\n", curr_lista->el);
             //print_list(reachable->head);
@@ -835,6 +841,7 @@ void BFS(grafo_t* GRAPH, nodo_grafo_t* start, nodo_grafo_t* end, char direzione)
                         if(v_grafo->visited == 'W') {
                             v_grafo->visited = 'G';
                             v_grafo->distance = curr_grafo->distance + 1;
+                            v_grafo->predecessor = curr_grafo;
                             list_insert_head(queue, v->el);
                         }
                     }  
@@ -879,31 +886,41 @@ int main() {
             }
             end_str[l] = '\0';
             if(atoi(end_str) > atoi(start_str)) {
-                //lista_t* l = pianifica_percorso(GRAPH, atoi(start_str), atoi(end_str), '>');
+                lista_t* path = malloc(sizeof(lista_t));
+                path->head = NULL;
+                path->tail = NULL;
                 nodo_grafo_t* start_grafo = graph_search(GRAPH, GRAPH->root, atoi(start_str));
                 nodo_grafo_t* end_grafo = graph_search(GRAPH, GRAPH->root, atoi(end_str));
                 BFS(GRAPH, start_grafo, end_grafo, '>');
-                printf("DIST %d\n", end_grafo->distance);
-                lista_t* l = NULL;
-                if(l == NULL) {
+                //printf("Dist: %d\n", end_grafo->distance);
+                if(end_grafo->predecessor == GRAPH->nil) {
                     printf("nessun percorso\n");
                 }
                 else {
-                    print_list(l->head);
+                    while(end_grafo != GRAPH->nil) {
+                        list_insert_head(path, end_grafo->stazione->distanza);
+                        end_grafo = end_grafo->predecessor;
+                    }
+                    print_list(path->head);
                 }
             }    
             else {
-                //lista_t* l = pianifica_percorso(GRAPH, atoi(end_str), atoi(start_str), '<');
+                lista_t* path = malloc(sizeof(lista_t));
+                path->head = NULL;
+                path->tail = NULL;
                 nodo_grafo_t* start_grafo = graph_search(GRAPH, GRAPH->root, atoi(start_str));
                 nodo_grafo_t* end_grafo = graph_search(GRAPH, GRAPH->root, atoi(end_str));
                 BFS(GRAPH, start_grafo, end_grafo, '<');
-                printf("DIST %d\n", end_grafo->distance);
-                lista_t* l = NULL;
-                if(l == NULL) {
+                //printf("Dist: %d\n", end_grafo->distance);
+                if(end_grafo->predecessor == GRAPH->nil) {
                     printf("nessun percorso\n");
                 }
                 else {
-                    print_list_backwards(l->tail);
+                    while(end_grafo != GRAPH->nil) {
+                        list_insert_head(path, end_grafo->stazione->distanza);
+                        end_grafo = end_grafo->predecessor;
+                    }
+                    print_list(path->head);
                 }
             }
         }
