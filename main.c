@@ -899,6 +899,13 @@ void BFS(grafo_t* GRAPH, nodo_grafo_t* start, nodo_grafo_t* end, char direzione)
                 break;
             }
             curr_grafo->visited = 'B';
+            v = reachable->head;
+            while(v != NULL) {         
+                nodo_lista_t* temp = v;
+                v = v->next;
+                free(temp);
+            }
+            free(reachable);
         }
     }
 }
