@@ -2,8 +2,7 @@
 
 # TODO:
 
-per ogni nodo vicino guardo se può arrivare a end e se sì salvo nella lista di liste
-il percorso, se ne trovo un'altro che ci mette meno salti lo salvo in testa cancellando l'altro, se alla fine ne ho
-più della stessa lunghezza uso la sum liste per vedere quella da scegliere
+per strada da maggiore a minore guardare tutti i nodi che arrivano alla fine e prendere il più piccolo e così
+a ritroso finché non arrivo alla partenza
 
-c'è poi da fixare il check al contrario
+ottimizzazione memoria e tempo (maybe change from recursive find reachable to iterative)

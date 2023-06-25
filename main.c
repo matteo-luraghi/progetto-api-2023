@@ -778,7 +778,7 @@ int update_graph(grafo_t* GRAPH, char command_text[], char command, int command_
 }
 
 void whiten(grafo_t* GRAPH, nodo_grafo_t* x) {
-    if(x != GRAPH->nil) {
+    if(x->left != GRAPH->nil) {
         whiten(GRAPH, x->left);
     }
 
@@ -786,25 +786,50 @@ void whiten(grafo_t* GRAPH, nodo_grafo_t* x) {
     x->distance = 2147483647;
     x->predecessor = GRAPH->nil;
 
-    if(x != GRAPH->nil) {
+    if(x->right != GRAPH->nil) {
         whiten(GRAPH, x->right);
     }
 }
 
 void find_reachable(nodo_grafo_t* start, nodo_grafo_t* x, nodo_grafo_t* NIL, lista_t* reachable, char direzione) {
-    if(x != NIL) {
-        find_reachable(start, x->left, NIL, reachable, direzione);
-        
-        if((direzione == '>' && 
-            x->stazione->distanza > start->stazione->distanza && 
-            x->stazione->distanza - start->stazione->distanza <= start->stazione->max) || (
-            direzione == '<' &&
-            start->stazione->distanza > x->stazione->distanza &&
-            start->stazione->distanza - x->stazione->distanza <= start->stazione->max)) {
-            list_insert_head(reachable, x->stazione->distanza);
+    nodo_grafo_t* curr;
+    nodo_grafo_t* prev;
+
+    curr = x;
+    while(curr != NIL) {
+        if(curr->left == NIL) {
+                if((direzione == '>' && 
+                    curr->stazione->distanza > start->stazione->distanza && 
+                    curr->stazione->distanza - start->stazione->distanza <= start->stazione->max) || (
+                    direzione == '<' &&
+                    start->stazione->distanza >curr->stazione->distanza &&
+                    start->stazione->distanza -curr->stazione->distanza <= start->stazione->max)) {
+                        list_insert_head(reachable,curr->stazione->distanza);
+                }
+            curr = curr->right;
         }
-        
-        find_reachable(start, x->right, NIL, reachable, direzione);
+        else {
+            prev = curr->left;
+            while(prev->right != NIL && prev->right != curr) {
+                prev = prev->right;
+            }
+            if(prev->right == NIL) {
+                prev->right = curr;
+                curr = curr->left;
+            }
+            else {
+                prev->right = NIL;
+                    if((direzione == '>' && 
+                        curr->stazione->distanza > start->stazione->distanza && 
+                        curr->stazione->distanza - start->stazione->distanza <= start->stazione->max) || (
+                        direzione == '<' &&
+                        start->stazione->distanza >curr->stazione->distanza &&
+                        start->stazione->distanza -curr->stazione->distanza <= start->stazione->max)) {
+                            list_insert_head(reachable,curr->stazione->distanza);
+                    }
+                curr = curr->right;
+            }
+        }
     }
 }
 
@@ -846,8 +871,14 @@ void BFS(grafo_t* GRAPH, nodo_grafo_t* start, nodo_grafo_t* end, char direzione)
                             v_grafo->predecessor = curr_grafo;
                             list_insert_head(queue, v->el);
                         }
+                        if(v_grafo == end) {
+                            break;
+                        }
                     }  
                 v = v->prev;
+            }
+            if(curr_grafo->stazione->distanza == end->stazione->distanza) {
+                break;
             }
             curr_grafo->visited = 'B';
         }
