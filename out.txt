@@ -437,7 +437,7 @@ aggiunta
 aggiunta
 aggiunta
 aggiunta
-18991 18545 17461 15851 13346 9767 1690
+18991 18545 17400 15498 12201 6258 1690
 rottamata
 aggiunta
 aggiunta
@@ -792,7 +792,7 @@ aggiunta
 aggiunta
 demolita
 demolita
-2970 4340 6272 11050 18234
+2970 4340 6272 10307 18234
 aggiunta
 rottamata
 aggiunta
@@ -980,7 +980,7 @@ aggiunta
 aggiunta
 demolita
 aggiunta
-2930 4340 6730 12201 18234 18677
+2930 3700 5308 8624 15498 18677
 aggiunta
 aggiunta
 demolita
@@ -1452,7 +1452,7 @@ aggiunta
 rottamata
 rottamata
 aggiunta
-375 857 1690 2970 4827 7432 13677 17461
+375 729 1432 2162 3700 5732 9767 17461
 aggiunta
 aggiunta
 demolita
@@ -1462,7 +1462,7 @@ rottamata
 aggiunta
 rottamata
 aggiunta
-19164 18888 18060 16407 13526 9038 1083 120
+19164 18606 17400 15237 12049 7106 1054 120
 aggiunta
 aggiunta
 aggiunta
@@ -1515,7 +1515,7 @@ aggiunta
 aggiunta
 non aggiunta
 aggiunta
-1083 2019 2970 4827 7432 13677 16567
+1083 1432 2162 3700 5732 8816 16567
 aggiunta
 aggiunta
 aggiunta
@@ -3359,7 +3359,7 @@ aggiunta
 rottamata
 rottamata
 aggiunta
-2199 3715 5790 9884 17993
+2199 3656 5732 9703 17993
 aggiunta
 aggiunta
 aggiunta
@@ -4352,7 +4352,7 @@ aggiunta
 aggiunta
 aggiunta
 aggiunta
-729 1481 2556 4307 6766 12252 17862
+729 1180 2137 3519 5671 9527 17862
 aggiunta
 demolita
 demolita
@@ -6896,7 +6896,7 @@ non rottamata
 aggiunta
 aggiunta
 aggiunta
-17882 17196 14825 11262 4316
+17882 16118 13087 8008 4316
 aggiunta
 aggiunta
 aggiunta
@@ -8244,7 +8244,7 @@ aggiunta
 aggiunta
 aggiunta
 aggiunta
-16567 14191 10225 2137 596
+16567 13782 9318 1115 596
 rottamata
 aggiunta
 rottamata
@@ -8543,7 +8543,7 @@ aggiunta
 aggiunta
 aggiunta
 aggiunta
-959 1839 3064 4955 7656 14334 18023
+959 1115 2072 3560 5732 9643 18023
 aggiunta
 aggiunta
 aggiunta
@@ -8595,7 +8595,7 @@ aggiunta
 aggiunta
 aggiunta
 demolita
-869 1690 2984 4912 7599 14191 17765
+869 1115 2072 3519 5671 9527 17765
 demolita
 aggiunta
 aggiunta
@@ -8777,7 +8777,7 @@ aggiunta
 aggiunta
 demolita
 aggiunta
-841 1608 2832 4634 7216 13346 18175 19607
+841 1115 2072 3519 5620 9219 17240 19607
 aggiunta
 aggiunta
 aggiunta
@@ -10351,7 +10351,7 @@ aggiunta
 aggiunta
 aggiunta
 aggiunta
-596 1180 2201 3737 5944 10357 17509
+596 1061 2019 3445 5581 9318 17509
 aggiunta
 aggiunta
 aggiunta
@@ -12283,7 +12283,7 @@ aggiunta
 aggiunta
 aggiunta
 aggiunta
-17461 16738 14085 10009 1608
+17461 15259 11872 5844 1608
 aggiunta
 aggiunta
 aggiunta
@@ -12852,7 +12852,7 @@ aggiunta
 aggiunta
 aggiunta
 aggiunta
-3036 4955 7669 14172 17806
+3036 3519 5671 9527 17806
 aggiunta
 aggiunta
 aggiunta
@@ -14236,7 +14236,7 @@ rottamata
 aggiunta
 aggiunta
 aggiunta
-17169 16802 14206 10196 2119 580
+17169 14825 11259 4268 1800 580
 rottamata
 aggiunta
 aggiunta
@@ -15506,7 +15506,7 @@ aggiunta
 aggiunta
 aggiunta
 rottamata
-2984 4912 7599 10049 18427
+2984 3603 5826 9966 18427
 aggiunta
 aggiunta
 aggiunta
@@ -16312,7 +16312,7 @@ aggiunta
 aggiunta
 aggiunta
 demolita
-206 648 1344 2410 4094 6487 11703 18175 18716
+206 412 979 1839 3216 5156 8196 15321 18716
 aggiunta
 aggiunta
 aggiunta
@@ -16884,7 +16884,7 @@ aggiunta
 aggiunta
 aggiunta
 aggiunta
-3715 5946 10357 18349 18857
+3715 5308 8282 15571 18857
 aggiunta
 aggiunta
 aggiunta
@@ -19487,7 +19487,7 @@ aggiunta
 aggiunta
 aggiunta
 aggiunta
-17461 16802 14206 10196 2119 578
+17461 15259 11839 5539 1839 578
 rottamata
 aggiunta
 non rottamata
@@ -23343,4 +23343,4 @@ aggiunta
 aggiunta
 aggiunta
 aggiunta
-17303 16802 14164 10055 1894
+17303 15018 11555 5402 1894
