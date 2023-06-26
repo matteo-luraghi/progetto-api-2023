@@ -1,12 +1,11 @@
 #include<stdio.h>
 #include<stdlib.h>
-#define COMMAND_LENGTH 1000
+#define COMMAND_LENGTH 1000000
 #define AGGIUNGI_AUTO '1'
 #define ROTTAMA_AUTO '2'
 #define AGGIUNGI_STAZIONE '3'
 #define DEMOLISCI_STAZIONE '4'
-//----------------------------------------------------
-//DATA STRUCTURE AND FUNCTIONS
+
 typedef struct nodo_lista {
     int el;
     struct nodo_lista *next;
@@ -19,10 +18,6 @@ typedef struct lista {
     struct lista* next;
 } lista_t;
 
-typedef struct lista_liste {
-    lista_t* head;
-} lista_liste_t;
-
 typedef struct nodo_albero {
     struct nodo_albero *right;
     struct nodo_albero *left;
@@ -31,10 +26,24 @@ typedef struct nodo_albero {
     char color;
 } nodo_albero_t;
 
+typedef struct nodo_queue {
+    struct nodo_queue *right;
+    struct nodo_queue *left;
+    struct nodo_queue *p;
+    int data;
+    int distance;
+    char color;
+} nodo_queue_t;
+
+typedef struct queue {
+    nodo_queue_t* root;
+    nodo_queue_t* nil;
+    int max;
+} queue_t;
+
 typedef struct albero {
-    nodo_albero_t* root;                //albero delle macchine
+    nodo_albero_t* root;                
     nodo_albero_t* nil;
-    struct albero* nodi_ragg;    //albero dei nodi raggiungibili
     int max;
     int distanza;
 } stazione_t;
@@ -46,17 +55,286 @@ typedef struct nodo_grafo {
     stazione_t* stazione;
     char color;
     char visited;
+    int distance;
+    struct nodo_grafo* predecessor;
 } nodo_grafo_t;
 
 typedef struct grafo {
     nodo_grafo_t* root;  
     nodo_grafo_t* nil;     
-} grafo_t;
+} grafo_t; 
 
+nodo_queue_t* queue_search(queue_t* T, nodo_queue_t* x, int distance) {
+    if(x == T->nil || distance == x->distance) {
+        return x;
+    }
+    if(distance < x->distance) {
+        return queue_search(T, x->left, distance);
+    }
+    else {
+        return queue_search(T, x->right, distance);
+    }
+}
+
+nodo_queue_t* queue_min(queue_t* T, nodo_queue_t* x) {
+    while(x->left != T->nil) {
+        x = x->left;
+    }
+    return x;
+}
+
+nodo_queue_t* queue_successor(queue_t* T, nodo_queue_t* x) {
+    if(x->right != T->nil) {
+        return queue_min(T, x->right);
+    }
+    nodo_queue_t* y = x->p;
+    while(y != T->nil && x == y->right) {
+        x = y;
+        y = y->p;
+    }
+    return y;
+}
+
+void queue_left_rotate(queue_t* T, nodo_queue_t* x) {
+    nodo_queue_t* y = x->right;
+    
+    x->right = y->left;
+    if(y->left != T->nil) {
+        y->left->p = x;
+    }
+    y->p = x->p;
+    if(x->p == T->nil) {
+        T->root = y;
+    }
+    else if(x == x->p->left) {
+        x->p->left = y;
+    }
+    else {
+        x->p->right = y;
+    }
+    y->left = x;
+    x->p = y;
+}
+
+void queue_right_rotate(queue_t* T, nodo_queue_t* y) {
+    nodo_queue_t* x = y->left;
+    y->left = x->right;
+    if(x->right != T->nil) {
+        x->right->p = y;
+    }
+    x->p = y->p;
+    if(y->p == T->nil) {
+        T->root = x;
+    }
+    else if(y == y->p->left) {
+        y->p->left = x;
+    }
+    else {
+        y->p->right = x;
+    }
+    x->right = y;
+    y->p = x;
+}
+
+void queue_insert_fixup(queue_t* T, nodo_queue_t* z) {
+    if(z == T->root) {
+        T->root->color = 'B';
+    }
+    else{                     
+        nodo_queue_t* x = z->p;              
+        if(x->color == 'R') {
+            if(x == x->p->left) {           
+                nodo_queue_t* y = x->p->right;   
+                if (y->color == 'R') {
+                    x->color = 'B';             
+                    y->color = 'B';             
+                    x->p->color = 'R';          
+                    queue_insert_fixup(T, x->p);   
+                }
+                else {
+                    if(z == x->right)  {
+                        z = x;                      
+                        queue_left_rotate(T, z); 
+                        x = z->p;           
+                    }
+                    x->color = 'B';                  
+                    x->p->color = 'R';              
+                    queue_right_rotate(T, x->p);          
+                }
+            }
+            else {
+                nodo_queue_t* y = x->p->left;
+                if (y->color == 'R') {
+                    x->color = 'B';
+                    y->color = 'B';
+                    x->p->color = 'R';
+                    queue_insert_fixup(T, x->p);
+                }
+                else {
+                    if(z == x->left) {
+                        z = x;
+                        queue_right_rotate(T, z);
+                        x = z->p;
+                    }  
+                    x->color = 'B';
+                    x->p->color = 'R';
+                    queue_left_rotate(T, x->p);
+                }
+            }
+        }
+    }
+}
+
+void queue_insert(queue_t* Q, int data, int distance) {
+    if(distance > Q->max) {
+        Q->max = distance;
+    }
+    nodo_queue_t* z = malloc(sizeof(nodo_queue_t));
+    z->data = data;
+    z->distance = distance;
+    nodo_queue_t* y = Q->nil;
+    nodo_queue_t* x = Q->root;
+
+    while(x != Q->nil) {
+        y = x;
+        if(z->distance < x->distance) {
+            x = x->left;
+        }
+        else {
+            x = x->right;
+        }
+    }
+    z->p = y;
+    if(y == Q->nil) {
+        Q->root = z;
+    }
+    else if(z->distance < y->distance) {
+        y->left = z;
+    }
+    else {
+        y->right = z;
+    }
+    z->left = Q->nil;
+    z->right = Q->nil;
+    z->color = 'R';
+    
+    queue_insert_fixup(Q, z);
+}
+
+void queue_delete_fixup(queue_t* T, nodo_queue_t* x) {
+    if (x->color == 'R' || x->p == T->nil) {
+        x->color = 'B';
+    }
+    else if(x == x->p->left) {
+        nodo_queue_t* w = x->p->right;
+        if(w->color == 'R') {
+            w->color = 'B';
+            x->p->color = 'R';
+            queue_left_rotate(T, x->p);
+            w = x->p->right;
+        }
+        if(w->left->color == 'B' && w->right->color == 'B') {
+            w->color = 'R';
+            queue_delete_fixup(T, x->p);
+        }
+        else {
+            if(w->right->color == 'B') {
+                w->left->color = 'B';
+                w->color = 'R';
+                queue_right_rotate(T, w);
+                w = x->p->right;
+            }
+            w->color = x->p->color;
+            x->p->color = 'B';
+            w->right->color = 'B';
+            queue_left_rotate(T, x->p);
+        }
+    }
+    else {
+        nodo_queue_t* w = x->p->left;
+        if(w->color == 'R') {
+            w->color = 'B';
+            x->p->color = 'R';
+            queue_right_rotate(T, x->p);
+            w = x->p->left;
+        }
+        if(w->right->color == 'B' && w->left->color == 'B') {
+            w->color = 'R';
+            queue_delete_fixup(T, x->p);
+        }
+        else {
+            if(w->left->color == 'B') {
+                w->right->color = 'B';
+                w->color = 'R';
+                queue_left_rotate(T, w);
+                w = x->p->left;
+            }
+            w->color = x->p->color;
+            x->p->color = 'B';
+            w->left->color = 'B';
+           queue_right_rotate(T, x->p);
+        }
+    }
+}
+
+nodo_queue_t* queue_delete(queue_t* T, int distance) {
+    nodo_queue_t* z = queue_search(T, T->root, distance);
+    nodo_queue_t* x;
+    nodo_queue_t* y;
+
+    if(z == T->nil) {
+        return z;
+    }
+
+    //updating the max
+    if(distance == T->max) {
+        if(z->left == T->nil) {
+            T->max = z->p->distance;    
+        }
+        else {
+            T->max = z->left->distance;
+        }
+    }
+
+    if(z->left == T->nil || z->right == T->nil) {
+        y = z;
+    }
+    else {
+        y = queue_successor(T, z);
+    }
+    if(y->left != T->nil) {
+        x = y->left;
+    }
+    else {
+        x = y->right;
+    }
+    x->p = y->p;
+    if(y->p == T->nil) {
+        T->root = x;
+    }
+    else if(y == y->p->left) {
+         y->p->left = x;        
+    }
+    else {
+        y->p->right = x;
+    }
+    if(y != z) {
+        z->distance = y->distance;
+    }
+    if(y->color == 'B') {
+        queue_delete_fixup(T, x);
+    }
+    return y;
+}
+
+//enqueue
 void list_insert_head(lista_t* l, int el) {
     nodo_lista_t* temp = malloc(sizeof(nodo_lista_t));
     temp->el = el;
     temp->next = l->head;
+    if(l->head != NULL) {
+        l->head->prev = temp;
+    }
     temp->prev = NULL;
     l->head = temp;
     if(l->tail == NULL) {
@@ -78,16 +356,21 @@ void list_insert_tail(lista_t* l, int el) {
     }
 }
 
-nodo_lista_t* dequeue(lista_t* l) {
-    if(l == NULL) {
+//dequeue
+nodo_lista_t* list_remove_tail(lista_t* l) {
+    if(l->tail == NULL) {
         return NULL;
     }
-    nodo_lista_t* front = l->head;
-    l->head = l->head->next;
-    if(l->head == NULL) {
+    if(l->tail == l->head) {
+        nodo_lista_t* tail = l->tail;
+        l->head = NULL;
         l->tail = NULL;
+        return tail;
     }
-    return front;
+    nodo_lista_t* tail = l->tail;
+    l->tail = tail->prev;
+    l->tail->next = NULL;
+    return tail;
 }
 
 void print_list(nodo_lista_t* x) {
@@ -112,31 +395,6 @@ void print_list_backwards(nodo_lista_t* x) {
         }
         x = x->prev;
     } printf("\n");
-}
-
-void list_list_insert_head(lista_liste_t* l, lista_t* el) {
-    el->next = l->head;
-    l->head = el;
-}
-
-lista_t* copy_list(nodo_lista_t* curr) {
-    lista_t* copied = malloc(sizeof(lista_t));
-    copied->head = NULL;
-    copied->tail = NULL;
-    while(curr != NULL) {
-        list_insert_tail(copied, curr->el);
-        curr = curr->next;
-    }
-    return copied;
-}
-
-int list_length(nodo_lista_t* x) {
-    int count = 0;
-    while( x != NULL) {
-        count++;
-        x = x->next;
-    }
-    return count;
 }
 
 nodo_albero_t* tree_search(stazione_t* T, nodo_albero_t* x, int data) {
@@ -450,63 +708,6 @@ nodo_albero_t* rb_delete(stazione_t* T, int data) {
     return y;
 }
 
-void graph_find_reachable(nodo_grafo_t* curr, nodo_grafo_t* modified, nodo_grafo_t* NIL, char command) {
-    if(curr->left != NIL) {  
-        graph_find_reachable(curr->left, modified, NIL, command);
-    }
-    int distanza_modulo = 0;
-        
-    if(command == AGGIUNGI_STAZIONE || command == AGGIUNGI_AUTO){
-
-        if(curr->stazione->distanza > modified->stazione->distanza) {
-            distanza_modulo = curr->stazione->distanza - modified->stazione->distanza;
-        }
-
-        else if(modified->stazione->distanza > curr->stazione->distanza) {
-            distanza_modulo = modified->stazione->distanza - curr->stazione->distanza;
-        }
-
-        if(distanza_modulo != 0 && distanza_modulo <= modified->stazione->max && tree_search(modified->stazione->nodi_ragg, modified->stazione->nodi_ragg->root, curr->stazione->distanza)==modified->stazione->nodi_ragg->nil) {
-            tree_insert(modified->stazione->nodi_ragg, curr->stazione->distanza);
-        }
-        if(distanza_modulo != 0 && distanza_modulo <= curr->stazione->max && tree_search(curr->stazione->nodi_ragg, curr->stazione->nodi_ragg->root, modified->stazione->distanza)==curr->stazione->nodi_ragg->nil) {
-            tree_insert(curr->stazione->nodi_ragg, modified->stazione->distanza);
-        }
-    }
-      
-    else if(command == ROTTAMA_AUTO) {
-        if(curr->stazione->distanza > modified->stazione->distanza) {
-            distanza_modulo = curr->stazione->distanza - modified->stazione->distanza;
-        } 
-        else if(modified->stazione->distanza > curr->stazione->distanza) {
-            distanza_modulo = modified->stazione->distanza - curr->stazione->distanza;
-        }
-        
-        if(distanza_modulo != 0 && distanza_modulo > modified->stazione->max) {
-            rb_delete(modified->stazione->nodi_ragg, curr->stazione->distanza);
-        }
-        if(distanza_modulo != 0 && distanza_modulo > curr->stazione->max) {
-            rb_delete(curr->stazione->nodi_ragg, modified->stazione->distanza);
-        }
-    } 
-
-    if(curr->right != NIL) {        
-        graph_find_reachable(curr->right, modified, NIL, command);
-    }
-}
-
-void graph_find_reachable_demolished(nodo_grafo_t* curr, int distanza, nodo_grafo_t* NIL) {
-    if(curr->left != NIL) {  
-        graph_find_reachable_demolished(curr->left, distanza, NIL);
-    }
-    if(tree_search(curr->stazione->nodi_ragg, curr->stazione->nodi_ragg->root, distanza) != curr->stazione->nodi_ragg->nil) {
-        rb_delete(curr->stazione->nodi_ragg, distanza);
-    } 
-    if(curr->right != NIL) {  
-        graph_find_reachable_demolished(curr->right, distanza, NIL);
-    }
-}
-
 nodo_grafo_t* graph_search(grafo_t* GRAPH, nodo_grafo_t* x, int stazione) {
     if(x == GRAPH->nil || stazione == x->stazione->distanza) {
         return x;
@@ -602,11 +803,6 @@ void graph_insert(grafo_t* GRAPH, int stazione) {
     z->stazione->root = z->stazione->nil;
     z->stazione->distanza = stazione;
     z->stazione->max = 0;
-    z->stazione->nodi_ragg = malloc(sizeof(stazione_t));
-    z->stazione->nodi_ragg->nil = malloc(sizeof(nodo_albero_t));
-    z->stazione->nodi_ragg->nil->data = -1;
-    z->stazione->nodi_ragg->nil->color = 'B';
-    z->stazione->nodi_ragg->root = z->stazione->nodi_ragg->nil;
 
     nodo_grafo_t* y = GRAPH->nil;
     nodo_grafo_t* x = GRAPH->root;
@@ -731,60 +927,6 @@ nodo_grafo_t* graph_delete(grafo_t* T, int distanza) {
     return y;
 }
 
-//-------------------------------------------------------
-// TO REMOVE BEFORE UPLOAD
-#define COUNT 10
-void print2DUtilTree(nodo_albero_t* root, int space, nodo_albero_t* NIL){
-    if (root == NIL)
-        return;
-    space += COUNT;
-    print2DUtilTree(root->right, space, NIL);
-    printf("\n");
-    for (int i = COUNT; i < space; i++)
-        printf(" ");
-    printf("%d - %c\n", root->data, root->color);
-    print2DUtilTree(root->left, space, NIL);
-}
- 
-// Wrapper over print2DUtil()
-void print2DTree(nodo_albero_t* root, nodo_albero_t* NIL){
-    // Pass initial space count as 0
-    print2DUtilTree(root, 0, NIL);
-}
-///////////////////////////////////////////////////////////////
-void print2DUtilGraph(nodo_grafo_t* root, int space, nodo_grafo_t* NIL){
-    if (root == NIL)
-        return;
-    space += COUNT;
-    print2DUtilGraph(root->right, space, NIL);
-    printf("\n");
-    for (int i = COUNT; i < space; i++)
-        printf(" ");
-    printf("%d - %c\n", root->stazione->distanza, root->color);
-    print2DUtilGraph(root->left, space, NIL);
-}
- 
-// Wrapper over print2DUtilGraph()
-void print2DGRAPH(nodo_grafo_t* root, nodo_grafo_t* NIL){
-    // Pass initial space count as 0
-    print2DUtilGraph(root, 0, NIL);
-}
-
-void graph_walk_print(nodo_grafo_t* x, nodo_grafo_t* NIL) {
-    if(x != NIL) {
-        graph_walk_print(x->left, NIL);
-        printf("Albero: %d, max: %d\n", x->stazione->distanza, x->stazione->max);
-        printf("Macchine:\n");
-        print2DTree(x->stazione->root, x->stazione->nil);
-        printf("Nodi Ragg:\n");
-        print2DTree(x->stazione->nodi_ragg->root, x->stazione->nodi_ragg->nil);
-        graph_walk_print(x->right, NIL);
-    }
-}
-//-------------------------------------------------------
-
-//----------------------------------------------------
-
 char string_compare(char a[], char b[], int len) {
     int i;
     for(i=0; i<len; i++) {
@@ -825,11 +967,10 @@ int update_graph(grafo_t* GRAPH, char command_text[], char command, int command_
         }
     }
     
-    else if(command == DEMOLISCI_STAZIONE) {
-        if(graph_search(GRAPH, GRAPH->root, station_distance) != GRAPH->nil) {
-            nodo_grafo_t* deleted = graph_delete(GRAPH, station_distance);
+    else if(command == DEMOLISCI_STAZIONE) {    
+        nodo_grafo_t* deleted = graph_delete(GRAPH, station_distance);
+        if(deleted != GRAPH->nil) {
             free(deleted);
-            graph_find_reachable_demolished(GRAPH->root, station_distance, GRAPH->nil);
             printf("demolita\n");
         }
         else {
@@ -853,7 +994,6 @@ int update_graph(grafo_t* GRAPH, char command_text[], char command, int command_
             if(tree_search(current_station->stazione, current_station->stazione->root, command_number) != current_station->stazione->nil) {
                 nodo_albero_t* deleted_auto = rb_delete(current_station->stazione, command_number);
                 if(deleted_auto->data == prev_max) {
-                    graph_find_reachable(GRAPH->root, current_station, GRAPH->nil, ROTTAMA_AUTO);
                 }
                 free(deleted_auto);
                 printf("rottamata\n");
@@ -870,7 +1010,6 @@ int update_graph(grafo_t* GRAPH, char command_text[], char command, int command_
             int prev_max = current_station->stazione->max;
             tree_insert(current_station->stazione, command_number);
             if(current_station->stazione->max != prev_max) {
-                graph_find_reachable(GRAPH->root, current_station, GRAPH->nil, AGGIUNGI_AUTO);
             }
             printf("aggiunta\n");
         }
@@ -905,7 +1044,6 @@ int update_graph(grafo_t* GRAPH, char command_text[], char command, int command_
                 count++;
             }
         }
-        graph_find_reachable(GRAPH->root, current_station, GRAPH->nil, AGGIUNGI_STAZIONE);
         if(count != command_number) {
             printf("non aggiunta\n");
             return 0;
@@ -918,103 +1056,222 @@ int update_graph(grafo_t* GRAPH, char command_text[], char command, int command_
 }
 
 void whiten(grafo_t* GRAPH, nodo_grafo_t* x) {
-    if(x != GRAPH->nil) {
-        whiten(GRAPH, x->left);
-    }
+    nodo_grafo_t* curr;
+    nodo_grafo_t* prev;
 
-    x->visited = 'W';
-
-    if(x != GRAPH->nil) {
-        whiten(GRAPH, x->right);
-    }
-}
-
-void cerca_per_vicini(grafo_t* GRAPH, nodo_albero_t* curr, int start, int end, lista_t* road, lista_liste_t* percorsi, char direzione) {
-    if(curr->data != -1) {
-        cerca_per_vicini(GRAPH, curr->left, start, end, road, percorsi, direzione);
-
-        nodo_grafo_t* curr_grafo = graph_search(GRAPH, GRAPH->root, curr->data);
-        if(curr->data == end) {
-            list_insert_tail(road, end);
-
-            if(percorsi->head != NULL && list_length(percorsi->head->head) > list_length(road->head)) {
-                free(percorsi->head);
-                percorsi->head = NULL;
-            }
-
-            list_list_insert_head(percorsi, road);
-        }
-
-        if(curr_grafo->visited == 'W' && ((direzione=='>' && curr->data > road->tail->el) || (direzione=='<' && road->tail->el > curr->data))) {
-            lista_t* temp = copy_list(road->head);
-            list_insert_tail(temp, curr->data);
-            curr_grafo->visited = 'B';
-            cerca_per_vicini(GRAPH, curr_grafo->stazione->nodi_ragg->root, start, end, temp, percorsi, direzione);
-        }
-
-        cerca_per_vicini(GRAPH, curr->right, start, end, road, percorsi, direzione);
-    }
-}
-
-void percorso_fixup(lista_t* percorso, grafo_t* GRAPH) {
-    nodo_lista_t* x = percorso->head;
-    while(x != NULL) {
-        nodo_grafo_t* curr = graph_search(GRAPH, GRAPH->root, x->el);
-        if(x->next != NULL) {
-            nodo_lista_t* y = x->next->next;
-            while(y != NULL) {
-                if(tree_search(curr->stazione->nodi_ragg, curr->stazione->nodi_ragg->root, y->el) != curr->stazione->nodi_ragg->nil) {
-                    nodo_lista_t* temp = y->prev->prev;
-                    while(temp != x && temp != NULL) {
-                        free(temp->next);
-                        temp = temp->prev;
-                    }
-                    x->next = y;
-                    y->prev = x;
-                }
-                y = y->next;
-            }
-            x = x->next;
+    curr = x;
+    while(curr != GRAPH->nil) {
+        if(curr->left == GRAPH->nil) {
+            curr->visited = 'W';
+            curr->distance = 2147483647;
+            curr->predecessor = GRAPH->nil;
+            curr = curr->right;
         }
         else {
-            x = NULL;
+            prev = curr->left;
+            while(prev->right != GRAPH->nil && prev->right != curr) {
+                prev = prev->right;
+            }
+            if(prev->right == GRAPH->nil) {
+                prev->right = curr;
+                curr = curr->left;
+            }
+            else {
+                prev->right = GRAPH->nil;
+                curr->visited = 'W';
+                curr->distance = 2147483647;
+                curr->predecessor = GRAPH->nil;
+                curr = curr->right;
+            }
         }
     }
 }
 
-lista_t* pianifica_percorso(grafo_t* GRAPH, int start, int end, char direzione) {
-    whiten(GRAPH, GRAPH->root);
-    nodo_grafo_t* station_start = graph_search(GRAPH, GRAPH->root, start);
-    nodo_grafo_t* station_end = graph_search(GRAPH, GRAPH->root, end);
-    if(station_start == GRAPH->nil || station_end == GRAPH->nil) {
-        return NULL;
-    }
-    
-    lista_t* path = malloc(sizeof(lista_t));
-    path->head = NULL;
-    path->tail = NULL;
-    if(tree_search(station_start->stazione->nodi_ragg, station_start->stazione->nodi_ragg->root, end) != station_start->stazione->nodi_ragg->nil) {
-        list_insert_head(path, start);
-        list_insert_tail(path, end);
-        return path;
-    }
-    lista_liste_t* percorsi = malloc(sizeof(lista_liste_t));
-    percorsi->head = NULL;
-    list_insert_head(path, start);
-    cerca_per_vicini(GRAPH, station_start->stazione->nodi_ragg->root, start, end, path, percorsi, direzione);
+void find_reachable(nodo_grafo_t* start, nodo_grafo_t* x, nodo_grafo_t* NIL, lista_t* reachable, char direzione) {
+    nodo_grafo_t* curr;
+    nodo_grafo_t* prev;
 
-    if(percorsi->head != NULL) {
-        lista_t* a = percorsi->head;
-        
-        a = NULL;
-        while(a != NULL) {
-            percorso_fixup(a, GRAPH);
-            print_list(a->head);
-            a = a->next;
+    curr = x;
+    while(curr != NIL) {
+        if(curr->left == NIL) {
+            if((direzione == '>' && 
+                curr->stazione->distanza > start->stazione->distanza && 
+                curr->stazione->distanza - start->stazione->distanza <= start->stazione->max) || (
+                direzione == '<' &&
+                start->stazione->distanza >curr->stazione->distanza &&
+                start->stazione->distanza -curr->stazione->distanza <= start->stazione->max)) {
+                    list_insert_head(reachable,curr->stazione->distanza);
+            }
+            curr = curr->right;
+        }
+        else {
+            prev = curr->left;
+            while(prev->right != NIL && prev->right != curr) {
+                prev = prev->right;
+            }
+            if(prev->right == NIL) {
+                prev->right = curr;
+                curr = curr->left;
+            }
+            else {
+                prev->right = NIL;
+                if((direzione == '>' && 
+                    curr->stazione->distanza > start->stazione->distanza && 
+                    curr->stazione->distanza - start->stazione->distanza <= start->stazione->max) || (
+                    direzione == '<' &&
+                    start->stazione->distanza >curr->stazione->distanza &&
+                    start->stazione->distanza -curr->stazione->distanza <= start->stazione->max)) {
+                        list_insert_head(reachable,curr->stazione->distanza);
+                }
+                curr = curr->right;
+            }
         }
     }
-    return percorsi->head;
-} 
+}
+
+void BFS(grafo_t* GRAPH, nodo_grafo_t* start, nodo_grafo_t* end, char direzione) {
+    whiten(GRAPH, GRAPH->root);
+    start->visited = 'G';
+    start->distance = 0;
+    lista_t* queue = malloc(sizeof(lista_t));
+    queue->head = NULL;
+    queue->tail = NULL;
+    list_insert_head(queue, start->stazione->distanza);
+    while(queue->head != NULL) {
+        nodo_lista_t* curr_lista = list_remove_tail(queue);
+        if(curr_lista != NULL) {
+            nodo_grafo_t* curr_grafo = graph_search(GRAPH, GRAPH->root, curr_lista->el);
+            free(curr_lista);
+            lista_t* reachable = malloc(sizeof(lista_t));
+            reachable->head = NULL;
+            reachable->tail = NULL;
+
+            //idea to speed things up
+            /*
+            nodo_grafo_t* start_search = curr_grafo;
+            while(start_search->p != GRAPH->nil && start_search->p->stazione->distanza > start_search->stazione->distanza) {
+                start_search = start_search->p;
+            }
+            */
+            find_reachable(curr_grafo, GRAPH->root, GRAPH->nil, reachable, direzione);
+            //printf("Nodo: %d\n", curr_lista->el);
+            //print_list(reachable->head);
+            nodo_lista_t* v = reachable->tail;
+            while(v != NULL) {
+                if((direzione == '>' && v->el > start->stazione->distanza && v->el <= end->stazione->distanza) || 
+                    (direzione == '<' && v->el < start->stazione->distanza && v->el >= end->stazione->distanza)) {
+                        nodo_grafo_t* v_grafo = graph_search(GRAPH, GRAPH->root, v->el);
+                        if(v_grafo->visited == 'W') {
+                            v_grafo->visited = 'G';
+                            v_grafo->distance = curr_grafo->distance + 1;
+                            v_grafo->predecessor = curr_grafo;
+                            list_insert_head(queue, v->el);
+                        }
+                        if(v_grafo == end) {
+                            break;
+                        }
+                    }  
+                v = v->prev;
+            }
+            if(curr_grafo->stazione->distanza == end->stazione->distanza) {
+                break;
+            }
+            curr_grafo->visited = 'B';
+            v = reachable->head;
+            while(v != NULL) {         
+                nodo_lista_t* temp = v;
+                v = v->next;
+                free(temp);
+            }
+            free(reachable);
+        }
+    }
+}
+
+void find_reached_by(nodo_grafo_t* end, nodo_grafo_t* x, nodo_grafo_t* NIL, lista_t* reachable) {
+    nodo_grafo_t* curr;
+    nodo_grafo_t* prev;
+
+    curr = x;
+    while(curr != NIL) {
+        if(curr->left == NIL) {
+            if(curr->stazione->distanza > end->stazione->distanza && 
+                curr->stazione->distanza - end->stazione->distanza <= curr->stazione->max) {
+                    list_insert_head(reachable,curr->stazione->distanza);
+            }
+            curr = curr->right;
+        }
+        else {
+            prev = curr->left;
+            while(prev->right != NIL && prev->right != curr) {
+                prev = prev->right;
+            }
+            if(prev->right == NIL) {
+                prev->right = curr;
+                curr = curr->left;
+            }
+            else {
+                prev->right = NIL;
+                if(curr->stazione->distanza > end->stazione->distanza && 
+                    curr->stazione->distanza - end->stazione->distanza <= curr->stazione->max) {
+                        list_insert_head(reachable,curr->stazione->distanza);
+                }
+                curr = curr->right;
+            }
+        }
+    }
+}
+
+void BFS_backwards(grafo_t* GRAPH, nodo_grafo_t* start, nodo_grafo_t* end) {
+    whiten(GRAPH, GRAPH->root);
+    start->visited = 'G';
+    start->distance = 0;
+    queue_t* queue = malloc(sizeof(queue_t));
+    queue->nil = malloc(sizeof(nodo_queue_t));
+    queue->nil->color = 'B';
+    queue->root = queue->nil;
+    queue->max = 0;
+
+    queue_insert(queue, start->stazione->distanza, start->distance);
+    while(queue->root != queue->nil) {
+        nodo_queue_t* curr_albero = queue_delete(queue, queue->max);
+        if(curr_albero != queue->nil) {
+            nodo_grafo_t* curr_grafo = graph_search(GRAPH, GRAPH->root, curr_albero->data);
+            free(curr_albero);
+            lista_t* reachable = malloc(sizeof(lista_t));
+            reachable->head = NULL;
+            reachable->tail = NULL; 
+            find_reachable(curr_grafo, GRAPH->root, GRAPH->nil, reachable, '<');
+            nodo_lista_t* v = reachable->tail;
+            while(v != NULL) {
+                if(v->el < start->stazione->distanza && v->el >= end->stazione->distanza) {
+                    nodo_grafo_t* v_grafo = graph_search(GRAPH, GRAPH->root, v->el);
+                    if(v_grafo->visited == 'W') {
+                        v_grafo->visited = 'G';
+                        v_grafo->distance = curr_grafo->distance + 1;
+                        v_grafo->predecessor = curr_grafo;
+                        queue_insert(queue, v->el, v_grafo->distance);
+                    }
+                    if(v_grafo == end) {
+                        break;
+                    }
+                }
+                v = v->prev;
+            }
+            if(curr_grafo->stazione->distanza == end->stazione->distanza) {
+                break;
+            }
+            curr_grafo->visited = 'B';
+            v = reachable->head;
+            while(v != NULL) {         
+                nodo_lista_t* temp = v;
+                v = v->next;
+                free(temp);
+            }
+            free(reachable);
+        }
+    }
+}
 
 
 int main() {
@@ -1050,35 +1307,53 @@ int main() {
                 l++;
             }
             end_str[l] = '\0';
-            if(atoi(end_str) > atoi(start_str)) {
-                //lista_t* l = pianifica_percorso(GRAPH, atoi(start_str), atoi(end_str), '>');
-                lista_t* l = NULL;
-                if(l == NULL) {
+            int start_num, end_num;
+            start_num = atoi(start_str);
+            end_num = atoi(end_str);
+            if(end_num > start_num) {
+                lista_t* path = malloc(sizeof(lista_t));
+                path->head = NULL;
+                path->tail = NULL;
+                nodo_grafo_t* start_grafo = graph_search(GRAPH, GRAPH->root, start_num);
+                nodo_grafo_t* end_grafo = graph_search(GRAPH, GRAPH->root, end_num);
+                BFS(GRAPH, start_grafo, end_grafo, '>');
+                //dijkstra(GRAPH, start_grafo, end_grafo, '>');
+                if(end_grafo->predecessor == GRAPH->nil) {
                     printf("nessun percorso\n");
                 }
                 else {
-                    print_list(l->head);
+                    while(end_grafo != GRAPH->nil) {
+                        list_insert_head(path, end_grafo->stazione->distanza);
+                        end_grafo = end_grafo->predecessor;
+                    }
+                    print_list(path->head);
                 }
             }    
             else {
-                lista_t* l = pianifica_percorso(GRAPH, atoi(end_str), atoi(start_str), '<');
-                if(l == NULL) {
+                lista_t* path = malloc(sizeof(lista_t));
+                path->head = NULL;
+                path->tail = NULL;
+                nodo_grafo_t* start_grafo = graph_search(GRAPH, GRAPH->root, start_num);
+                nodo_grafo_t* end_grafo = graph_search(GRAPH, GRAPH->root, end_num);
+                //BFS(GRAPH, start_grafo, end_grafo, '<');
+                BFS_backwards(GRAPH, start_grafo, end_grafo);
+                //dijkstra(GRAPH, start_grafo, end_grafo, '<');
+                if(end_grafo->predecessor == GRAPH->nil) {
                     printf("nessun percorso\n");
                 }
                 else {
-                    print_list_backwards(l->tail);
+                    while(end_grafo != GRAPH->nil) {
+                        list_insert_head(path, end_grafo->stazione->distanza);
+                        end_grafo = end_grafo->predecessor;
+                    }
+                    print_list(path->head);
                 }
             }
         }
 
         if(dataret != 0) {
             printf("Errore\n");
-        }
-        else {
-            //print2DGRAPH(GRAPH->root, GRAPH->nil);
-            //graph_walk_print(GRAPH->root, GRAPH->nil);
-            //printf("------------------------------------------------------------\n");
-        }
+        } 
     }
     return 0;
 }

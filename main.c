@@ -816,14 +816,14 @@ void find_reachable(nodo_grafo_t* start, nodo_grafo_t* x, nodo_grafo_t* NIL, lis
     curr = x;
     while(curr != NIL) {
         if(curr->left == NIL) {
-                if((direzione == '>' && 
-                    curr->stazione->distanza > start->stazione->distanza && 
-                    curr->stazione->distanza - start->stazione->distanza <= start->stazione->max) || (
-                    direzione == '<' &&
-                    start->stazione->distanza >curr->stazione->distanza &&
-                    start->stazione->distanza -curr->stazione->distanza <= start->stazione->max)) {
-                        list_insert_head(reachable,curr->stazione->distanza);
-                }
+            if((direzione == '>' && 
+                curr->stazione->distanza > start->stazione->distanza && 
+                curr->stazione->distanza - start->stazione->distanza <= start->stazione->max) || (
+                direzione == '<' &&
+                start->stazione->distanza >curr->stazione->distanza &&
+                start->stazione->distanza -curr->stazione->distanza <= start->stazione->max)) {
+                    list_insert_head(reachable,curr->stazione->distanza);
+            }
             curr = curr->right;
         }
         else {
@@ -837,14 +837,14 @@ void find_reachable(nodo_grafo_t* start, nodo_grafo_t* x, nodo_grafo_t* NIL, lis
             }
             else {
                 prev->right = NIL;
-                    if((direzione == '>' && 
-                        curr->stazione->distanza > start->stazione->distanza && 
-                        curr->stazione->distanza - start->stazione->distanza <= start->stazione->max) || (
-                        direzione == '<' &&
-                        start->stazione->distanza >curr->stazione->distanza &&
-                        start->stazione->distanza -curr->stazione->distanza <= start->stazione->max)) {
-                            list_insert_head(reachable,curr->stazione->distanza);
-                    }
+                if((direzione == '>' && 
+                    curr->stazione->distanza > start->stazione->distanza && 
+                    curr->stazione->distanza - start->stazione->distanza <= start->stazione->max) || (
+                    direzione == '<' &&
+                    start->stazione->distanza >curr->stazione->distanza &&
+                    start->stazione->distanza -curr->stazione->distanza <= start->stazione->max)) {
+                        list_insert_head(reachable,curr->stazione->distanza);
+                }
                 curr = curr->right;
             }
         }
@@ -863,6 +863,7 @@ void BFS(grafo_t* GRAPH, nodo_grafo_t* start, nodo_grafo_t* end, char direzione)
         nodo_lista_t* curr_lista = list_remove_tail(queue);
         if(curr_lista != NULL) {
             nodo_grafo_t* curr_grafo = graph_search(GRAPH, GRAPH->root, curr_lista->el);
+            free(curr_lista);
             lista_t* reachable = malloc(sizeof(lista_t));
             reachable->head = NULL;
             reachable->tail = NULL;
@@ -874,7 +875,6 @@ void BFS(grafo_t* GRAPH, nodo_grafo_t* start, nodo_grafo_t* end, char direzione)
                 start_search = start_search->p;
             }
             */
-
             find_reachable(curr_grafo, GRAPH->root, GRAPH->nil, reachable, direzione);
             //printf("Nodo: %d\n", curr_lista->el);
             //print_list(reachable->head);
@@ -953,7 +953,6 @@ int main() {
                 nodo_grafo_t* start_grafo = graph_search(GRAPH, GRAPH->root, start_num);
                 nodo_grafo_t* end_grafo = graph_search(GRAPH, GRAPH->root, end_num);
                 BFS(GRAPH, start_grafo, end_grafo, '>');
-                //dijkstra(GRAPH, start_grafo, end_grafo, '>');
                 if(end_grafo->predecessor == GRAPH->nil) {
                     printf("nessun percorso\n");
                 }
@@ -972,7 +971,6 @@ int main() {
                 nodo_grafo_t* start_grafo = graph_search(GRAPH, GRAPH->root, start_num);
                 nodo_grafo_t* end_grafo = graph_search(GRAPH, GRAPH->root, end_num);
                 BFS(GRAPH, start_grafo, end_grafo, '<');
-                //dijkstra(GRAPH, start_grafo, end_grafo, '<');
                 if(end_grafo->predecessor == GRAPH->nil) {
                     printf("nessun percorso\n");
                 }
@@ -988,7 +986,7 @@ int main() {
 
         if(dataret != 0) {
             printf("Errore\n");
-        }
+        } 
     }
     return 0;
 }
