@@ -998,6 +998,7 @@ void BFS_backwards(grafo_t* GRAPH, nodo_grafo_t* start, nodo_grafo_t* end) {
                 free(temp);
             }
             free(reachable);
+            free(v);
         }
     }
 }
@@ -1055,6 +1056,14 @@ int main() {
                     }
                     print_list(path->head);
                 }
+                nodo_lista_t* temp = path->head;
+                while(temp != NULL) {
+                    nodo_lista_t* deleted = temp;
+                    temp = temp->next;
+                    free(deleted);
+                }
+                free(path);
+                free(temp);
             }    
             else {
                 lista_t* path = malloc(sizeof(lista_t));
@@ -1073,6 +1082,14 @@ int main() {
                     }
                     print_list_backwards(path->tail);
                 }
+                nodo_lista_t* temp = path->head;
+                while(temp != NULL) {
+                    nodo_lista_t* deleted = temp;
+                    temp = temp->next;
+                    free(deleted);
+                }
+                free(path);
+                free(temp);
             }
         }
 
