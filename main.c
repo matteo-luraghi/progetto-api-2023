@@ -40,7 +40,6 @@ typedef struct nodo_grafo {
     stazione_t* stazione;
     char color;
     char visited;
-    int distance;
     struct nodo_grafo* predecessor;
 } nodo_grafo_t;
 
@@ -785,7 +784,6 @@ void whiten(grafo_t* GRAPH, nodo_grafo_t* x) {
     while(curr != GRAPH->nil) {
         if(curr->left == GRAPH->nil) {
             curr->visited = 'W';
-            curr->distance = 2147483647;
             curr->predecessor = GRAPH->nil;
             curr = curr->right;
         }
@@ -801,7 +799,6 @@ void whiten(grafo_t* GRAPH, nodo_grafo_t* x) {
             else {
                 prev->right = GRAPH->nil;
                 curr->visited = 'W';
-                curr->distance = 2147483647;
                 curr->predecessor = GRAPH->nil;
                 curr = curr->right;
             }
@@ -888,7 +885,6 @@ void find_reached(nodo_grafo_t* end, nodo_grafo_t* x, nodo_grafo_t* NIL, lista_t
 void BFS(grafo_t* GRAPH, nodo_grafo_t* start, nodo_grafo_t* end, char direzione) {
     whiten(GRAPH, GRAPH->root);
     start->visited = 'G';
-    start->distance = 0;
     lista_t* queue = malloc(sizeof(lista_t));
     queue->head = NULL;
     queue->tail = NULL;
@@ -919,7 +915,6 @@ void BFS(grafo_t* GRAPH, nodo_grafo_t* start, nodo_grafo_t* end, char direzione)
                         nodo_grafo_t* v_grafo = graph_search(GRAPH, GRAPH->root, v->el);
                         if(v_grafo->visited == 'W') {
                             v_grafo->visited = 'G';
-                            v_grafo->distance = curr_grafo->distance + 1;
                             v_grafo->predecessor = curr_grafo;
                             list_insert_head(queue, v->el);
                         }
@@ -947,7 +942,6 @@ void BFS(grafo_t* GRAPH, nodo_grafo_t* start, nodo_grafo_t* end, char direzione)
 void BFS_backwards(grafo_t* GRAPH, nodo_grafo_t* start, nodo_grafo_t* end) {
     whiten(GRAPH, GRAPH->root);
     end->visited = 'G';
-    end->distance = 0;
     lista_t* queue = malloc(sizeof(lista_t));
     queue->head = NULL;
     queue->tail = NULL;
@@ -977,7 +971,6 @@ void BFS_backwards(grafo_t* GRAPH, nodo_grafo_t* start, nodo_grafo_t* end) {
                         nodo_grafo_t* v_grafo = graph_search(GRAPH, GRAPH->root, v->el);
                         if(v_grafo->visited == 'W') {
                             v_grafo->visited = 'G';
-                            v_grafo->distance = curr_grafo->distance + 1;
                             v_grafo->predecessor = curr_grafo;
                             list_insert_head(queue, v->el);
                         }
