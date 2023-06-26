@@ -896,15 +896,8 @@ void BFS(grafo_t* GRAPH, nodo_grafo_t* start, nodo_grafo_t* end, char direzione)
             lista_t* reachable = malloc(sizeof(lista_t));
             reachable->head = NULL;
             reachable->tail = NULL;
-
-            //idea to speed things up
-            /*
-            nodo_grafo_t* start_search = curr_grafo;
-            while(start_search->p != GRAPH->nil && start_search->p->stazione->distanza > start_search->stazione->distanza) {
-                start_search = start_search->p;
-            }
-            */
-            find_reachable(curr_grafo, GRAPH->root, GRAPH->nil, reachable, direzione);
+            
+            find_reachable(curr_grafo, GRAPH->root, GRAPH->nil, reachable, direzione); 
             //printf("Nodo: %d\n", curr_lista->el);
             //print_list(reachable->head);
             free(curr_lista);
@@ -954,13 +947,6 @@ void BFS_backwards(grafo_t* GRAPH, nodo_grafo_t* start, nodo_grafo_t* end) {
             reachable->head = NULL;
             reachable->tail = NULL;
 
-            //idea to speed things up
-            /*
-            nodo_grafo_t* start_search = curr_grafo;
-            while(start_search->p != GRAPH->nil && start_search->p->stazione->distanza > start_search->stazione->distanza) {
-                start_search = start_search->p;
-            }
-            */
             find_reached(curr_grafo, GRAPH->root, GRAPH->nil, reachable);
             //printf("Nodo: %d\n", curr_lista->el);
             //print_list(reachable->head);
