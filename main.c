@@ -806,20 +806,15 @@ void whiten(grafo_t* GRAPH, nodo_grafo_t* x) {
     }
 }
 
-void find_reachable(nodo_grafo_t* start, nodo_grafo_t* x, nodo_grafo_t* NIL, lista_t* reachable, char direzione) {
+void find_reachable(nodo_grafo_t* start, nodo_grafo_t* x, nodo_grafo_t* NIL, lista_t* reachable) {
     nodo_grafo_t* curr;
     nodo_grafo_t* prev;
 
     curr = x;
     while(curr != NIL) {
         if(curr->left == NIL) {
-            if((direzione == '>' &&
-                curr->stazione->distanza > start->stazione->distanza && 
-                curr->stazione->distanza - start->stazione->distanza <= start->stazione->max) || (
-                direzione == '<' &&
-                start->stazione->distanza >curr->stazione->distanza &&
-                start->stazione->distanza -curr->stazione->distanza <= start->stazione->max)) {
-                    list_insert_head(reachable,curr->stazione->distanza);
+            if(curr->stazione->distanza > start->stazione->distanza && 
+                curr->stazione->distanza - start->stazione->distanza <= start->stazione->max) {                 list_insert_head(reachable,curr->stazione->distanza);
             }
             curr = curr->right;
         }
@@ -834,12 +829,8 @@ void find_reachable(nodo_grafo_t* start, nodo_grafo_t* x, nodo_grafo_t* NIL, lis
             }
             else {
                 prev->right = NIL;
-                if((direzione == '>' && 
-                    curr->stazione->distanza > start->stazione->distanza && 
-                    curr->stazione->distanza - start->stazione->distanza <= start->stazione->max) || (
-                    direzione == '<' &&
-                    start->stazione->distanza >curr->stazione->distanza &&
-                    start->stazione->distanza -curr->stazione->distanza <= start->stazione->max)) {
+                if( curr->stazione->distanza > start->stazione->distanza && 
+                    curr->stazione->distanza - start->stazione->distanza <= start->stazione->max) {
                         list_insert_head(reachable,curr->stazione->distanza);
                 }
                 curr = curr->right;
@@ -882,7 +873,7 @@ void find_reached(nodo_grafo_t* end, nodo_grafo_t* x, nodo_grafo_t* NIL, lista_t
     }
 }
 
-void BFS(grafo_t* GRAPH, nodo_grafo_t* start, nodo_grafo_t* end, char direzione) {
+void BFS(grafo_t* GRAPH, nodo_grafo_t* start, nodo_grafo_t* end) {
     whiten(GRAPH, GRAPH->root);
     start->visited = 'G';
     lista_t* queue = malloc(sizeof(lista_t));
@@ -897,14 +888,13 @@ void BFS(grafo_t* GRAPH, nodo_grafo_t* start, nodo_grafo_t* end, char direzione)
             reachable->head = NULL;
             reachable->tail = NULL;
             
-            find_reachable(curr_grafo, GRAPH->root, GRAPH->nil, reachable, direzione); 
+            find_reachable(curr_grafo, GRAPH->root, GRAPH->nil, reachable); 
             //printf("Nodo: %d\n", curr_lista->el);
             //print_list(reachable->head);
             free(curr_lista);
             nodo_lista_t* v = reachable->tail;
             while(v != NULL) {
-                if((direzione == '>' && v->el > start->stazione->distanza && v->el <= end->stazione->distanza) || 
-                    (direzione == '<' && v->el < start->stazione->distanza && v->el >= end->stazione->distanza)) {
+                if(v->el > start->stazione->distanza && v->el <= end->stazione->distanza) {
                         nodo_grafo_t* v_grafo = graph_search(GRAPH, GRAPH->root, v->el);
                         if(v_grafo->visited == 'W') {
                             v_grafo->visited = 'G';
@@ -1024,7 +1014,7 @@ int main() {
                 path->tail = NULL;
                 nodo_grafo_t* start_grafo = graph_search(GRAPH, GRAPH->root, start_num);
                 nodo_grafo_t* end_grafo = graph_search(GRAPH, GRAPH->root, end_num);
-                BFS(GRAPH, start_grafo, end_grafo, '>');
+                BFS(GRAPH, start_grafo, end_grafo);
                 if(end_grafo->predecessor == GRAPH->nil) {
                     printf("nessun percorso\n");
                 }
