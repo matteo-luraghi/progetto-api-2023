@@ -808,7 +808,8 @@ void find_reachable(nodo_grafo_t* start, nodo_grafo_t* x, nodo_grafo_t* NIL, lis
     while(curr != NIL) {
         if(curr->left == NIL) {
             if(curr->stazione->distanza > start->stazione->distanza && 
-                curr->stazione->distanza - start->stazione->distanza <= start->stazione->max) {                 list_insert_head(reachable,curr->stazione->distanza);
+                curr->stazione->distanza - start->stazione->distanza <= start->stazione->max) {    
+                    list_insert_head(reachable,curr->stazione->distanza);
             }
             curr = curr->right;
         }

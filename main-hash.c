@@ -38,13 +38,12 @@ typedef struct albero {
 typedef struct nodo_grafo {
     int key;
     char visited;
+    struct nodo_grafo* prev;
     stazione_t* stazione;
 } nodo_grafo_t;
 
 typedef struct grafo {
     nodo_grafo_t** items;
-    int size;
-    int count;
 } grafo_t;
 
 //enqueue
@@ -434,7 +433,6 @@ void graph_insert(grafo_t* GRAPH, int key) {
         index %= HASH_SIZE;
     }
     GRAPH->items[index] = item;
-    GRAPH->count++;
 }
 
 nodo_grafo_t* graph_delete(grafo_t* GRAPH, int key) {
@@ -444,7 +442,6 @@ nodo_grafo_t* graph_delete(grafo_t* GRAPH, int key) {
             nodo_grafo_t* temp = GRAPH->items[index];
             GRAPH->items[index]->key = -1;
             GRAPH->items[index]->stazione = NULL;
-            GRAPH->count--;
             return temp;
         }
         index++;
@@ -576,10 +573,65 @@ int update_graph(grafo_t* GRAPH, char command_text[], char command, int command_
     return 1;
 }
 
+void BFS(grafo_t* GRAPH, int* nodi, int len) {
+    int i;
+    nodo_grafo_t* start = graph_search(GRAPH, nodi[0]);
+    start->visited = 'G';
+    lista_t* queue = malloc(sizeof(lista_t));
+    queue->head = NULL;
+    queue->tail = NULL;
+    list_insert_head(queue, nodi[0]);
+    while(queue->head != NULL) {
+        nodo_lista_t* curr_lista = list_remove_tail(queue);
+        if(curr_lista != NULL) {
+            nodo_grafo_t* curr_grafo = graph_search(GRAPH, curr_lista->el);
+            lista_t* reachable = malloc(sizeof(lista_t));
+            reachable->head = NULL;
+            reachable->tail = NULL;
+
+            //find reachable
+            for(i = 0; i < len; i++) {
+                if(nodi[i] > curr_grafo->key && nodi[i] - curr_grafo->key <= curr_grafo->stazione->max){
+                    list_insert_head(reachable, nodi[i]);
+                }
+            }
+            free(curr_lista);
+            nodo_lista_t* v_lista = reachable->tail;
+            while(v_lista != NULL) {
+                if(v_lista->el > nodi[0] && v_lista->el <= nodi[len-1]) {
+                    nodo_grafo_t* v_grafo = graph_search(GRAPH, v_lista->el);
+                    if(v_grafo->visited == 'W') {
+                        v_grafo->visited = 'G';
+                        v_grafo->prev = curr_grafo;
+                        list_insert_head(queue, v_lista->el);
+                    }
+                    if(v_lista->el == nodi[len-1]) {
+                        break;
+                    }
+                }
+                v_lista = v_lista->prev;
+            }
+            if(curr_grafo->key == nodi[len-1]) {
+                break;
+            }
+            curr_grafo->visited = 'B';
+            v_lista = reachable->head;
+            while(v_lista != NULL) {
+                nodo_lista_t* temp = v_lista;
+                v_lista = v_lista->next;
+                free(temp);
+            }
+            free(reachable);
+        }
+    }
+}
+
+void BFS_backwards(grafo_t* GRAPH, int* nodi, int len) {
+    
+}
+
 int main() {
     grafo_t* GRAPH = malloc(sizeof(grafo_t));
-    GRAPH->size = HASH_SIZE;
-    GRAPH->count = 0;
     GRAPH->items = malloc(HASH_SIZE*(sizeof(nodo_grafo_t)));
     for(int p=0; p<HASH_SIZE;p++) {
         GRAPH->items[p] = NULL;
@@ -601,8 +653,6 @@ int main() {
             dataret = update_graph(GRAPH,command, DEMOLISCI_STAZIONE, 19);
         }
         else if(string_compare(command, "pianifica-percorso", 17) == '1') {
-            ///////////////////////////////////////////////////
-            printf("nessun percorso\n");
             char start_str[30], end_str[30];
             int len = string_len(command), i, j=0, k, l=0;
             for(i = 19; i<len && command[i] != ' '; i++) {
@@ -651,6 +701,42 @@ int main() {
 
             insertion_sort(nodi_utili, nodi_utili_len);
             
+            for(int q = 0; q < nodi_utili_len; q++) {
+                nodo_grafo_t* curr = graph_search(GRAPH, nodi_utili[q]);
+                curr->visited = 'W';
+                curr->prev = NULL;
+            }
+
+            if(end_num > start_num) {
+                BFS(GRAPH, nodi_utili, nodi_utili_len);
+                lista_t* path = malloc(sizeof(lista_t));
+                path->head = NULL;
+                path->tail = NULL;
+                nodo_grafo_t* end_grafo = graph_search(GRAPH, end_num);
+                if(end_grafo->prev == NULL) {
+                    printf("nessun percorso\n");
+                }
+                else {
+                    while(end_grafo != NULL) {
+                        list_insert_head(path, end_grafo->key);
+                        end_grafo = end_grafo->prev;
+                    }
+                    print_list(path->head);
+                }
+                nodo_lista_t* temp = path->head;
+                while(temp != NULL) {
+                    nodo_lista_t* deleted = temp;
+                    temp = temp->next;
+                    free(deleted);
+                }
+                free(path);
+                free(temp);
+            }
+            else {
+                printf("nessun percorso\n");
+                BFS_backwards(GRAPH, nodi_utili, nodi_utili_len);
+            }
+
 /*             for(int w = 0; w < nodi_utili_len; w++) {
                 printf("%d ", nodi_utili[w]);
             } printf("\n"); */
