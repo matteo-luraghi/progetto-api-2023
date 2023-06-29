@@ -627,7 +627,59 @@ void BFS(grafo_t* GRAPH, int* nodi, int len) {
 }
 
 void BFS_backwards(grafo_t* GRAPH, int* nodi, int len) {
-    
+    int i;
+    nodo_grafo_t* end = graph_search(GRAPH, nodi[0]);
+    end->visited = 'G';
+    lista_t* queue = malloc(sizeof(lista_t));
+    queue->head = NULL;
+    queue->tail = NULL;
+    list_insert_head(queue, nodi[0]);
+
+    while(queue->head != NULL) {
+        nodo_lista_t* curr_lista = list_remove_tail(queue);
+        if(curr_lista != NULL) {
+            nodo_grafo_t* curr_grafo = graph_search(GRAPH, curr_lista->el);
+            lista_t* reachable = malloc(sizeof(lista_t));
+            reachable->head = NULL;
+            reachable->tail = NULL;
+
+            //find reachable
+            for(i = len-1; i >= 0; i--) {
+                nodo_grafo_t* i_grafo = graph_search(GRAPH, nodi[i]);
+                if(nodi[i] > curr_grafo->key && nodi[i] - curr_grafo->key <= i_grafo->stazione->max){
+                    list_insert_tail(reachable, nodi[i]);
+                }
+            }
+
+            free(curr_lista);
+            nodo_lista_t* v_lista = reachable->tail;
+            while(v_lista != NULL) {
+                if(v_lista->el > nodi[0] && v_lista->el <= nodi[len-1]) {
+                    nodo_grafo_t* v_grafo = graph_search(GRAPH, v_lista->el);
+                    if(v_grafo->visited == 'W') {
+                        v_grafo->visited = 'G';
+                        v_grafo->prev = curr_grafo;
+                        list_insert_head(queue, v_lista->el);
+                    }
+                    if(v_lista->el == nodi[len-1]) {
+                        break;
+                    }
+                }
+                v_lista = v_lista->prev;
+            }
+            if(curr_grafo->key == nodi[len-1]) {
+                break;
+            }
+            curr_grafo->visited = 'B';
+            v_lista = reachable->head;
+            while(v_lista != NULL) {
+                nodo_lista_t* temp = v_lista;
+                v_lista = v_lista->next;
+                free(temp);
+            }
+            free(reachable);
+        }
+    }
 }
 
 int main() {
@@ -671,7 +723,7 @@ int main() {
 
             int* nodi_utili = malloc(sizeof(int)*HASH_SIZE);
             int nodi_utili_len = 0;
-            
+
             if(end_num > start_num) {
                 nodi_utili[0] = start_num;
                 nodi_utili_len++;
@@ -687,20 +739,21 @@ int main() {
             }    
             else {
                 nodi_utili[0] = end_num;
+                nodi_utili_len++;
+                
                 for(int m = 0; m < HASH_SIZE; m++) {
                     if(GRAPH->items[m] != NULL && GRAPH->items[m]->key < start_num && GRAPH->items[m]->key > end_num) {
                         nodi_utili[nodi_utili_len] = GRAPH->items[m]->key;
                         nodi_utili_len++;
                     }
                 }
+
                 nodi_utili[nodi_utili_len] = start_num;
                 nodi_utili_len++;
             }
 
-            nodi_utili = realloc(nodi_utili, nodi_utili_len*sizeof(int));
-
             insertion_sort(nodi_utili, nodi_utili_len);
-            
+
             for(int q = 0; q < nodi_utili_len; q++) {
                 nodo_grafo_t* curr = graph_search(GRAPH, nodi_utili[q]);
                 curr->visited = 'W';
@@ -733,8 +786,29 @@ int main() {
                 free(temp);
             }
             else {
-                printf("nessun percorso\n");
                 BFS_backwards(GRAPH, nodi_utili, nodi_utili_len);
+                lista_t* path = malloc(sizeof(lista_t));
+                path->head = NULL;
+                path->tail = NULL;
+                nodo_grafo_t* start_grafo = graph_search(GRAPH, start_num);
+                if(start_grafo->prev == NULL) {
+                    printf("nessun percorso\n");
+                }
+                else {
+                    while(start_grafo != NULL) {
+                        list_insert_head(path, start_grafo->key);
+                        start_grafo = start_grafo->prev;
+                    }
+                    print_list_backwards(path->tail);
+                }
+                nodo_lista_t* temp = path->head;
+                while(temp != NULL) {
+                    nodo_lista_t* deleted = temp;
+                    temp = temp->next;
+                    free(deleted);
+                }
+                free(path);
+                free(temp);
             }
 
 /*             for(int w = 0; w < nodi_utili_len; w++) {

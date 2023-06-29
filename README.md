@@ -9,3 +9,5 @@ fixare i seg fault dovuti alla realloc nella lettura dell'input -> idea: massimo
 
 l'ottimizzazione di find reachable/ed di risalire fino al padre che continene tutti i nodi
 a distanza maggiore o minore di quello corrente per non controllare tutto l'albero non funziona
+
+break quando raggiungi in nodi curr grafo
