@@ -711,11 +711,8 @@ int update_graph(grafo_t* GRAPH, char command_text[], char command, int command_
     if(command == ROTTAMA_AUTO) {
         nodo_grafo_t* current_station = graph_search(GRAPH, GRAPH->root, station_distance);
         if(current_station != GRAPH->nil) {
-            int prev_max = current_station->stazione->max;
             if(tree_search(current_station->stazione, current_station->stazione->root, command_number) != current_station->stazione->nil) {
                 nodo_albero_t* deleted_auto = rb_delete(current_station->stazione, command_number);
-                if(deleted_auto->data == prev_max) {
-                }
                 free(deleted_auto);
                 printf("rottamata\n");
                 return 0;
@@ -728,10 +725,7 @@ int update_graph(grafo_t* GRAPH, char command_text[], char command, int command_
     else if(command == AGGIUNGI_AUTO) {
         nodo_grafo_t* current_station = graph_search(GRAPH, GRAPH->root, station_distance);
         if(current_station != GRAPH->nil) {
-            int prev_max = current_station->stazione->max;
             tree_insert(current_station->stazione, command_number);
-            if(current_station->stazione->max != prev_max) {
-            }
             printf("aggiunta\n");
         }
         else {
