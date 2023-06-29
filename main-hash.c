@@ -494,7 +494,7 @@ int update_graph(grafo_t* GRAPH, char command_text[], char command, int command_
         nodo_grafo_t* deleted = graph_delete(GRAPH, station_distance);
         if(deleted != NULL) {
             free(deleted->stazione);
-            free(deleted);
+            //free(deleted);
             printf("demolita\n");
         }
         else {
@@ -540,23 +540,19 @@ int update_graph(grafo_t* GRAPH, char command_text[], char command, int command_
     else if(command == AGGIUNGI_STAZIONE) {
         nodo_grafo_t* current_station = graph_search(GRAPH, station_distance);
         count = 0;
-        char* data_str = (char*)malloc(2*sizeof(char));
+        char data_str[10];
         int data;
         data_str[0] = '\0';
         for(i = j + 1; i < len && count < command_number; i++) {
             if(command_text[i] != ' ' && command_text[i] != '\0') {
-                data_str = (char*)realloc(data_str, (k+2)*sizeof(char));
                 data_str[k] = command_text[i];
                 data_str[k+1] = '\0';
                 k++;
             }
             else {
-                data_str = (char*)realloc(data_str, (k+2)*sizeof(char));
                 data_str[k] = '\0';
                 data = atoi(data_str);
                 tree_insert(current_station->stazione, data);
-                free(data_str);
-                data_str = (char*)malloc(2*sizeof(char));
                 data_str[0] = '\0';
                 k = 0;
                 count++;
