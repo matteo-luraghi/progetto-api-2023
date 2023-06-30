@@ -573,51 +573,58 @@ void BFS(grafo_t* GRAPH, int* nodi, int len) {
     int i;
     nodo_grafo_t* start = graph_search(GRAPH, nodi[0]);
     start->visited = 'G';
-    lista_t* queue = malloc(sizeof(lista_t));
-    queue->head = NULL;
-    queue->tail = NULL;
-    list_insert_head(queue, nodi[0]);
-    while(queue->head != NULL) {
-        nodo_lista_t* curr_lista = list_remove_tail(queue);
-        if(curr_lista != NULL) {
-            nodo_grafo_t* curr_grafo = graph_search(GRAPH, curr_lista->el);
-            lista_t* reachable = malloc(sizeof(lista_t));
-            reachable->head = NULL;
-            reachable->tail = NULL;
+
+    int queue[HASH_SIZE];
+    int queue_head = HASH_SIZE/2;
+    int queue_tail = HASH_SIZE/2;
+    queue[queue_head] = nodi[0];
+
+    int reachable[HASH_SIZE];
+    int reachable_tail = 0;
+    
+    while(queue_head != queue_tail || queue[HASH_SIZE/2] == nodi[0]) {
+        if(queue[queue_tail] != 0) {
+            nodo_grafo_t* curr_grafo = graph_search(GRAPH, queue[queue_tail]);
 
             //find reachable
-            for(i = 0; i < len; i++) {
+            reachable_tail = 0;
+            for(i = len-1; i >= 0; i--) {
+                if(nodi[i] == curr_grafo->key) {
+                    break;
+                }
                 if(nodi[i] > curr_grafo->key && nodi[i] - curr_grafo->key <= curr_grafo->stazione->max){
-                    list_insert_head(reachable, nodi[i]);
+                    reachable[reachable_tail] = nodi[i];
+                    reachable_tail++;
                 }
             }
-            free(curr_lista);
-            nodo_lista_t* v_lista = reachable->tail;
-            while(v_lista != NULL) {
-                if(v_lista->el > nodi[0] && v_lista->el <= nodi[len-1]) {
-                    nodo_grafo_t* v_grafo = graph_search(GRAPH, v_lista->el);
+
+            while(reachable_tail != -1) {
+                if(reachable[reachable_tail] > nodi[0] && reachable[reachable_tail] <= nodi[len-1]) {
+                    nodo_grafo_t* v_grafo = graph_search(GRAPH, reachable[reachable_tail]);
                     if(v_grafo->visited == 'W') {
                         v_grafo->visited = 'G';
                         v_grafo->prev = curr_grafo;
-                        list_insert_head(queue, v_lista->el);
+                        queue_head--;
+                        if(queue_head<0) {
+                            queue_head = HASH_SIZE - 1;
+                        }
+                        queue[queue_head] = reachable[reachable_tail];
                     }
-                    if(v_lista->el == nodi[len-1]) {
+                    if(reachable[reachable_tail] == nodi[len-1]) {
                         break;
                     }
                 }
-                v_lista = v_lista->prev;
+                reachable[reachable_tail] = 0;
+                reachable_tail--;
             }
             if(curr_grafo->key == nodi[len-1]) {
                 break;
             }
-            curr_grafo->visited = 'B';
-            v_lista = reachable->head;
-            while(v_lista != NULL) {
-                nodo_lista_t* temp = v_lista;
-                v_lista = v_lista->next;
-                free(temp);
-            }
-            free(reachable);
+        }
+        queue[queue_tail] = 0;
+        queue_tail--;
+        if(queue_tail<0) {
+            queue_tail = HASH_SIZE - 1;
         }
     }
 }
@@ -626,54 +633,61 @@ void BFS_backwards(grafo_t* GRAPH, int* nodi, int len) {
     int i;
     nodo_grafo_t* end = graph_search(GRAPH, nodi[0]);
     end->visited = 'G';
-    lista_t* queue = malloc(sizeof(lista_t));
-    queue->head = NULL;
-    queue->tail = NULL;
-    list_insert_head(queue, nodi[0]);
 
-    while(queue->head != NULL) {
-        nodo_lista_t* curr_lista = list_remove_tail(queue);
-        if(curr_lista != NULL) {
-            nodo_grafo_t* curr_grafo = graph_search(GRAPH, curr_lista->el);
-            lista_t* reachable = malloc(sizeof(lista_t));
-            reachable->head = NULL;
-            reachable->tail = NULL;
+    int queue[HASH_SIZE];
+    int queue_head = HASH_SIZE/2;
+    int queue_tail = HASH_SIZE/2;
+    queue[queue_head] = nodi[0];
+
+    int reachable[HASH_SIZE];
+    int reachable_tail = 0;
+
+    while(queue_head != queue_tail || queue[HASH_SIZE/2] == nodi[0]) {
+        if(queue[queue_tail] != 0) {
+            nodo_grafo_t* curr_grafo = graph_search(GRAPH, queue[queue_tail]);
 
             //find reachable
+            reachable_tail = 0;
             for(i = len-1; i >= 0; i--) {
+                if(nodi[i] == curr_grafo->key) {
+                    break;
+                }
                 nodo_grafo_t* i_grafo = graph_search(GRAPH, nodi[i]);
                 if(nodi[i] > curr_grafo->key && nodi[i] - curr_grafo->key <= i_grafo->stazione->max){
-                    list_insert_tail(reachable, nodi[i]);
+                    reachable[reachable_tail] = nodi[i];
+                    reachable_tail++;
                 }
             }
 
-            free(curr_lista);
-            nodo_lista_t* v_lista = reachable->tail;
-            while(v_lista != NULL) {
-                if(v_lista->el > nodi[0] && v_lista->el <= nodi[len-1]) {
-                    nodo_grafo_t* v_grafo = graph_search(GRAPH, v_lista->el);
+            while(reachable_tail != -1) {
+                if(reachable[reachable_tail] > nodi[0] && reachable[reachable_tail] <= nodi[len-1]) {
+                    nodo_grafo_t* v_grafo = graph_search(GRAPH, reachable[reachable_tail]);
                     if(v_grafo->visited == 'W') {
                         v_grafo->visited = 'G';
                         v_grafo->prev = curr_grafo;
-                        list_insert_head(queue, v_lista->el);
+                        queue_head--;
+                        if(queue_head<0) {
+                            queue_head = HASH_SIZE - 1;
+                        }
+                        queue[queue_head] = reachable[reachable_tail];
                     }
-                    if(v_lista->el == nodi[len-1]) {
+                    if(reachable[reachable_tail] == nodi[len-1]) {
                         break;
                     }
                 }
-                v_lista = v_lista->prev;
+                reachable[reachable_tail] = 0;
+                reachable_tail--;
             }
+
             if(curr_grafo->key == nodi[len-1]) {
                 break;
             }
             curr_grafo->visited = 'B';
-            v_lista = reachable->head;
-            while(v_lista != NULL) {
-                nodo_lista_t* temp = v_lista;
-                v_lista = v_lista->next;
-                free(temp);
-            }
-            free(reachable);
+        }
+        queue[queue_tail] = 0;
+        queue_tail--;
+        if(queue_tail<0) {
+            queue_tail = HASH_SIZE - 1;
         }
     }
 }
