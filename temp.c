@@ -32,30 +32,18 @@ typedef struct albero {
     nodo_albero_t* root;                
     nodo_albero_t* nil;
     int max;
-    //maybe useless
     int distanza;
 } stazione_t;
 
-typedef struct nodo_collisioni {
-    struct nodo_collisioni* right;
-    struct nodo_collisioni* left;
-    struct nodo_collisioni* p;
-    char color;
+typedef struct nodo_grafo {
     int key;
     char visited;
+    struct nodo_grafo* prev;
     stazione_t* stazione;
-} nodo_collisioni_t;
-
-typedef struct nodo_grafo {
-    nodo_collisioni_t* root;
-    nodo_collisioni_t* nil;
 } nodo_grafo_t;
 
 typedef struct grafo {
     nodo_grafo_t** items;
-    //probably useless
-    int size;
-    int count;
 } grafo_t;
 
 //enqueue
@@ -102,6 +90,18 @@ nodo_lista_t* list_remove_tail(lista_t* l) {
     l->tail = tail->prev;
     l->tail->next = NULL;
     return tail;
+}
+
+void insertion_sort(int* A, int len) {
+    for(int j = 1; j < len; j++) {
+        int key = A[j];
+        int i = j - 1;
+        while(i > 0 && A[i] > key) {
+            A[i + 1] = A[i];
+            i--;
+        }
+        A[i + 1] = key;
+    } 
 }
 
 void print_list(nodo_lista_t* x) {
@@ -398,285 +398,18 @@ nodo_albero_t* rb_delete(stazione_t* T, int data) {
     return y;
 }
 
-nodo_collisioni_t* collisioni_search(nodo_grafo_t* T, nodo_collisioni_t* x, int data) {
-    if(x == T->nil || data == x->key) {
-        return x;
-    }
-    if(data < x->key) {
-        return collisioni_search(T, x->left, data);
-    }
-    else {
-        return collisioni_search(T, x->right, data);
-    }
-}
-
-nodo_collisioni_t* collisioni_min(nodo_grafo_t* T, nodo_collisioni_t* x) {
-    while(x->left != T->nil) {
-        x = x->left;
-    }
-    return x;
-}
-
-nodo_collisioni_t* collisioni_max(nodo_grafo_t* T, nodo_collisioni_t* x) {
-    while(x->right != T->nil) {
-        x = x->right;
-    }
-    return x;
-}
-
-nodo_collisioni_t* tree_successor(nodo_grafo_t* T, nodo_collisioni_t* x) {
-    if(x->right != T->nil) {
-        return collisioni_min(T, x->right);
-    }
-    nodo_collisioni_t* y = x->p;
-    while(y != T->nil && x == y->right) {
-        x = y;
-        y = y->p;
-    }
-    return y;
-}
-
-void collisioni_left_rotate(nodo_grafo_t* T, nodo_collisioni_t* x) {
-    nodo_collisioni_t* y = x->right;
-    
-    x->right = y->left;
-    if(y->left != T->nil) {
-        y->left->p = x;
-    }
-    y->p = x->p;
-    if(x->p == T->nil) {
-        T->root = y;
-    }
-    else if(x == x->p->left) {
-        x->p->left = y;
-    }
-    else {
-        x->p->right = y;
-    }
-    y->left = x;
-    x->p = y;
-}
-
-void collisioni_right_rotate(nodo_grafo_t* T, nodo_collisioni_t* y) {
-    nodo_collisioni_t* x = y->left;
-    y->left = x->right;
-    if(x->right != T->nil) {
-        x->right->p = y;
-    }
-    x->p = y->p;
-    if(y->p == T->nil) {
-        T->root = x;
-    }
-    else if(y == y->p->left) {
-        y->p->left = x;
-    }
-    else {
-        y->p->right = x;
-    }
-    x->right = y;
-    y->p = x;
-}
-
-void collisioni_insert_fixup(nodo_grafo_t* T, nodo_collisioni_t* z) {
-    if(z == T->root) {
-        T->root->color = 'B';
-    }
-    else{                     
-        nodo_collisioni_t* x = z->p;              
-        if(x->color == 'R') {
-            if(x == x->p->left) {           
-                nodo_collisioni_t* y = x->p->right;   
-                if (y->color == 'R') {
-                    x->color = 'B';             
-                    y->color = 'B';             
-                    x->p->color = 'R';          
-                    collisioni_insert_fixup(T, x->p);   
-                }
-                else {
-                    if(z == x->right)  {
-                        z = x;                      
-                        collisioni_left_rotate(T, z); 
-                        x = z->p;           
-                    }
-                    x->color = 'B';                  
-                    x->p->color = 'R';              
-                    collisioni_right_rotate(T, x->p);          
-                }
-            }
-            else {
-                nodo_collisioni_t* y = x->p->left;
-                if (y->color == 'R') {
-                    x->color = 'B';
-                    y->color = 'B';
-                    x->p->color = 'R';
-                    collisioni_insert_fixup(T, x->p);
-                }
-                else {
-                    if(z == x->left) {
-                        z = x;
-                        collisioni_right_rotate(T, z);
-                        x = z->p;
-                    }  
-                    x->color = 'B';
-                    x->p->color = 'R';
-                    collisioni_left_rotate(T, x->p);
-                }
-            }
-        }
-    }
-}
-
-void collisioni_insert(nodo_grafo_t* T, int data) {
-    if(data > T->max) {
-        T->max = data;
-    }
-
-    nodo_collisioni_t* z = malloc(sizeof(nodo_collisioni_t));
-    z->key = data;
-
-    nodo_collisioni_t* y = T->nil; 
-    nodo_collisioni_t* x = T->root;
-
-    while(x != T->nil) {
-        y = x;
-        if(z->key < x->key) {
-            x = x->left;
-        }
-        else {
-            x = x->right;
-        }
-    }
-    z->p = y;
-    if(y == T->nil) {
-        T->root = z;
-    }
-    else if(z->key < y->key) {
-        y->left = z;
-    }
-    else {
-        y->right = z;
-    }
-    z->left = T->nil;
-    z->right = T->nil;
-    z->color = 'R';
-    collisioni_insert_fixup(T, z);
-}
-
-void collisioni_delete_fixup(nodo_grafo_t* T, nodo_collisioni_t* x) {
-    if (x->color == 'R' || x->p == T->nil) {
-        x->color = 'B';
-    }
-    else if(x == x->p->left) {
-        nodo_collisioni_t* w = x->p->right;
-        if(w->color == 'R') {
-            w->color = 'B';
-            x->p->color = 'R';
-            collisioni_left_rotate(T, x->p);
-            w = x->p->right;
-        }
-        if(w->left->color == 'B' && w->right->color == 'B') {
-            w->color = 'R';
-            collisioni_delete_fixup(T, x->p);
-        }
-        else {
-            if(w->right->color == 'B') {
-                w->left->color = 'B';
-                w->color = 'R';
-                collisioni_right_rotate(T, w);
-                w = x->p->right;
-            }
-            w->color = x->p->color;
-            x->p->color = 'B';
-            w->right->color = 'B';
-            collisioni_left_rotate(T, x->p);
-        }
-    }
-    else {
-        nodo_collisioni_t* w = x->p->left;
-        if(w->color == 'R') {
-            w->color = 'B';
-            x->p->color = 'R';
-            collisioni_right_rotate(T, x->p);
-            w = x->p->left;
-        }
-        if(w->right->color == 'B' && w->left->color == 'B') {
-            w->color = 'R';
-            collisioni_delete_fixup(T, x->p);
-        }
-        else {
-            if(w->left->color == 'B') {
-                w->right->color = 'B';
-                w->color = 'R';
-                collisioni_left_rotate(T, w);
-                w = x->p->left;
-            }
-            w->color = x->p->color;
-            x->p->color = 'B';
-            w->left->color = 'B';
-           collisioni_right_rotate(T, x->p);
-        }
-    }
-}
-
-nodo_collisioni_t* collisioni_delete(nodo_grafo_t* T, int data) {
-    nodo_collisioni_t* z = collisioni_search(T, T->root, data);
-    nodo_collisioni_t* x;
-    nodo_collisioni_t* y;
-
-    if(z == T->nil) {
-        return z;
-    }
-
-    //updating the max
-    if(data == T->max) {
-        if(z->left == T->nil) {
-            T->max = z->p->key;    
-        }
-        else {
-            T->max = z->left->key;
-        }
-    }
-
-    if(z->left == T->nil || z->right == T->nil) {
-        y = z;
-    }
-    else {
-        y = collisioni_successor(T, z);
-    }
-    if(y->left != T->nil) {
-        x = y->left;
-    }
-    else {
-        x = y->right;
-    }
-    x->p = y->p;
-    if(y->p == T->nil) {
-        T->root = x;
-    }
-    else if(y == y->p->left) {
-         y->p->left = x;        
-    }
-    else {
-        y->p->right = x;
-    }
-    if(y != z) {
-        z->key = y->key;
-    }
-    if(y->color == 'B') {
-        collisioni_delete_fixup(T, x);
-    }
-    return y;
-}
-
 int hash_function(int key) {
     return key % HASH_MOD;
 }
 
-nodo_collisioni_t* graph_search(grafo_t* GRAPH, int key) {
+nodo_grafo_t* graph_search(grafo_t* GRAPH, int key) {
     int index = hash_function(key);
-    nodo_collisioni_t found = collisioni_search(GRAPH->items[index], GRAPH->items[index]->root, key);
-    if(found != GRAPH->items[index]->nil) {
-        return found;
+    while(GRAPH->items[index] != NULL) {
+        if(GRAPH->items[index]->key == key) {
+            return GRAPH->items[index];
+        }
+        index++;
+        index %= HASH_SIZE;
     }
     return NULL;
 }
@@ -690,10 +423,8 @@ void graph_insert(grafo_t* GRAPH, int key) {
     stazione->root = stazione->nil;
 
     nodo_grafo_t* item = malloc(sizeof(nodo_grafo_t));
-    item->nil = malloc(sizeof(nodo_collisioni_t));
-    item->nil->color = 'B';
-    item->root = item->nil;
-    collisioni_insert(item, key);
+    item->key = key;
+    item->stazione = stazione;
 
     int index = hash_function(key);
     
@@ -702,7 +433,6 @@ void graph_insert(grafo_t* GRAPH, int key) {
         index %= HASH_SIZE;
     }
     GRAPH->items[index] = item;
-    GRAPH->count++;
 }
 
 nodo_grafo_t* graph_delete(grafo_t* GRAPH, int key) {
@@ -712,7 +442,6 @@ nodo_grafo_t* graph_delete(grafo_t* GRAPH, int key) {
             nodo_grafo_t* temp = GRAPH->items[index];
             GRAPH->items[index]->key = -1;
             GRAPH->items[index]->stazione = NULL;
-            GRAPH->count--;
             return temp;
         }
         index++;
@@ -765,7 +494,7 @@ int update_graph(grafo_t* GRAPH, char command_text[], char command, int command_
         nodo_grafo_t* deleted = graph_delete(GRAPH, station_distance);
         if(deleted != NULL) {
             free(deleted->stazione);
-            free(deleted);
+            //free(deleted);
             printf("demolita\n");
         }
         else {
@@ -811,23 +540,19 @@ int update_graph(grafo_t* GRAPH, char command_text[], char command, int command_
     else if(command == AGGIUNGI_STAZIONE) {
         nodo_grafo_t* current_station = graph_search(GRAPH, station_distance);
         count = 0;
-        char* data_str = (char*)malloc(2*sizeof(char));
+        char data_str[10];
         int data;
         data_str[0] = '\0';
         for(i = j + 1; i < len && count < command_number; i++) {
             if(command_text[i] != ' ' && command_text[i] != '\0') {
-                data_str = (char*)realloc(data_str, (k+2)*sizeof(char));
                 data_str[k] = command_text[i];
                 data_str[k+1] = '\0';
                 k++;
             }
             else {
-                data_str = (char*)realloc(data_str, (k+2)*sizeof(char));
                 data_str[k] = '\0';
                 data = atoi(data_str);
                 tree_insert(current_station->stazione, data);
-                free(data_str);
-                data_str = (char*)malloc(2*sizeof(char));
                 data_str[0] = '\0';
                 k = 0;
                 count++;
@@ -844,10 +569,117 @@ int update_graph(grafo_t* GRAPH, char command_text[], char command, int command_
     return 1;
 }
 
+void BFS(grafo_t* GRAPH, int* nodi, int len) {
+    int i;
+    nodo_grafo_t* start = graph_search(GRAPH, nodi[0]);
+    start->visited = 'G';
+    lista_t* queue = malloc(sizeof(lista_t));
+    queue->head = NULL;
+    queue->tail = NULL;
+    list_insert_head(queue, nodi[0]);
+    while(queue->head != NULL) {
+        nodo_lista_t* curr_lista = list_remove_tail(queue);
+        if(curr_lista != NULL) {
+            nodo_grafo_t* curr_grafo = graph_search(GRAPH, curr_lista->el);
+            lista_t* reachable = malloc(sizeof(lista_t));
+            reachable->head = NULL;
+            reachable->tail = NULL;
+
+            //find reachable
+            for(i = 0; i < len; i++) {
+                if(nodi[i] > curr_grafo->key && nodi[i] - curr_grafo->key <= curr_grafo->stazione->max){
+                    list_insert_head(reachable, nodi[i]);
+                }
+            }
+            free(curr_lista);
+            nodo_lista_t* v_lista = reachable->tail;
+            while(v_lista != NULL) {
+                if(v_lista->el > nodi[0] && v_lista->el <= nodi[len-1]) {
+                    nodo_grafo_t* v_grafo = graph_search(GRAPH, v_lista->el);
+                    if(v_grafo->visited == 'W') {
+                        v_grafo->visited = 'G';
+                        v_grafo->prev = curr_grafo;
+                        list_insert_head(queue, v_lista->el);
+                    }
+                    if(v_lista->el == nodi[len-1]) {
+                        break;
+                    }
+                }
+                v_lista = v_lista->prev;
+            }
+            if(curr_grafo->key == nodi[len-1]) {
+                break;
+            }
+            curr_grafo->visited = 'B';
+            v_lista = reachable->head;
+            while(v_lista != NULL) {
+                nodo_lista_t* temp = v_lista;
+                v_lista = v_lista->next;
+                free(temp);
+            }
+            free(reachable);
+        }
+    }
+}
+
+void BFS_backwards(grafo_t* GRAPH, int* nodi, int len) {
+    int i;
+    nodo_grafo_t* end = graph_search(GRAPH, nodi[0]);
+    end->visited = 'G';
+    lista_t* queue = malloc(sizeof(lista_t));
+    queue->head = NULL;
+    queue->tail = NULL;
+    list_insert_head(queue, nodi[0]);
+
+    while(queue->head != NULL) {
+        nodo_lista_t* curr_lista = list_remove_tail(queue);
+        if(curr_lista != NULL) {
+            nodo_grafo_t* curr_grafo = graph_search(GRAPH, curr_lista->el);
+            lista_t* reachable = malloc(sizeof(lista_t));
+            reachable->head = NULL;
+            reachable->tail = NULL;
+
+            //find reachable
+            for(i = len-1; i >= 0; i--) {
+                nodo_grafo_t* i_grafo = graph_search(GRAPH, nodi[i]);
+                if(nodi[i] > curr_grafo->key && nodi[i] - curr_grafo->key <= i_grafo->stazione->max){
+                    list_insert_tail(reachable, nodi[i]);
+                }
+            }
+
+            free(curr_lista);
+            nodo_lista_t* v_lista = reachable->tail;
+            while(v_lista != NULL) {
+                if(v_lista->el > nodi[0] && v_lista->el <= nodi[len-1]) {
+                    nodo_grafo_t* v_grafo = graph_search(GRAPH, v_lista->el);
+                    if(v_grafo->visited == 'W') {
+                        v_grafo->visited = 'G';
+                        v_grafo->prev = curr_grafo;
+                        list_insert_head(queue, v_lista->el);
+                    }
+                    if(v_lista->el == nodi[len-1]) {
+                        break;
+                    }
+                }
+                v_lista = v_lista->prev;
+            }
+            if(curr_grafo->key == nodi[len-1]) {
+                break;
+            }
+            curr_grafo->visited = 'B';
+            v_lista = reachable->head;
+            while(v_lista != NULL) {
+                nodo_lista_t* temp = v_lista;
+                v_lista = v_lista->next;
+                free(temp);
+            }
+            free(reachable);
+        }
+    }
+}
+
 int main() {
     grafo_t* GRAPH = malloc(sizeof(grafo_t));
-    GRAPH->size = HASH_SIZE;
-    GRAPH->count = 0;
     GRAPH->items = malloc(HASH_SIZE*(sizeof(nodo_grafo_t)));
     for(int p=0; p<HASH_SIZE;p++) {
         GRAPH->items[p] = NULL;
@@ -884,25 +716,59 @@ int main() {
             int start_num, end_num;
             start_num = atoi(start_str);
             end_num = atoi(end_str);
-            ////////////////////////////////////////////////////////
-            if(start_num >= end_num || end_num >= start_num) {
-                printf("nessun percorso\n");
-            }
-            /*
+
+            int* nodi_utili = malloc(sizeof(int)*HASH_SIZE);
+            int nodi_utili_len = 0;
+
             if(end_num > start_num) {
+                nodi_utili[0] = start_num;
+                nodi_utili_len++;
+
+                for(int m = 0; m < HASH_SIZE; m++) {
+                    if(GRAPH->items[m] != NULL && GRAPH->items[m]->key > start_num && GRAPH->items[m]->key < end_num) {
+                        nodi_utili[nodi_utili_len] = GRAPH->items[m]->key;
+                        nodi_utili_len++;
+                    }
+                }
+                nodi_utili[nodi_utili_len] = end_num;
+                nodi_utili_len++;
+            }    
+            else {
+                nodi_utili[0] = end_num;
+                nodi_utili_len++;
+                
+                for(int m = 0; m < HASH_SIZE; m++) {
+                    if(GRAPH->items[m] != NULL && GRAPH->items[m]->key < start_num && GRAPH->items[m]->key > end_num) {
+                        nodi_utili[nodi_utili_len] = GRAPH->items[m]->key;
+                        nodi_utili_len++;
+                    }
+                }
+
+                nodi_utili[nodi_utili_len] = start_num;
+                nodi_utili_len++;
+            }
+
+            insertion_sort(nodi_utili, nodi_utili_len);
+
+            for(int q = 0; q < nodi_utili_len; q++) {
+                nodo_grafo_t* curr = graph_search(GRAPH, nodi_utili[q]);
+                curr->visited = 'W';
+                curr->prev = NULL;
+            }
+
+            if(end_num > start_num) {
+                BFS(GRAPH, nodi_utili, nodi_utili_len);
                 lista_t* path = malloc(sizeof(lista_t));
                 path->head = NULL;
                 path->tail = NULL;
-                nodo_grafo_t* start_grafo = graph_search(GRAPH, GRAPH->root, start_num);
-                nodo_grafo_t* end_grafo = graph_search(GRAPH, GRAPH->root, end_num);
-                BFS(GRAPH, start_grafo, end_grafo);
-                if(end_grafo->predecessor == GRAPH->nil) {
+                nodo_grafo_t* end_grafo = graph_search(GRAPH, end_num);
+                if(end_grafo->prev == NULL) {
                     printf("nessun percorso\n");
                 }
                 else {
-                    while(end_grafo != GRAPH->nil) {
-                        list_insert_head(path, end_grafo->stazione->distanza);
-                        end_grafo = end_grafo->predecessor;
+                    while(end_grafo != NULL) {
+                        list_insert_head(path, end_grafo->key);
+                        end_grafo = end_grafo->prev;
                     }
                     print_list(path->head);
                 }
@@ -914,21 +780,20 @@ int main() {
                 }
                 free(path);
                 free(temp);
-            }    
+            }
             else {
+                BFS_backwards(GRAPH, nodi_utili, nodi_utili_len);
                 lista_t* path = malloc(sizeof(lista_t));
                 path->head = NULL;
                 path->tail = NULL;
-                nodo_grafo_t* start_grafo = graph_search(GRAPH, GRAPH->root, start_num);
-                nodo_grafo_t* end_grafo = graph_search(GRAPH, GRAPH->root, end_num);
-                BFS_backwards(GRAPH, start_grafo, end_grafo);
-                if(start_grafo->predecessor == GRAPH->nil) {
+                nodo_grafo_t* start_grafo = graph_search(GRAPH, start_num);
+                if(start_grafo->prev == NULL) {
                     printf("nessun percorso\n");
                 }
                 else {
-                    while(start_grafo != GRAPH->nil) {
-                        list_insert_head(path, start_grafo->stazione->distanza);
-                        start_grafo = start_grafo->predecessor;
+                    while(start_grafo != NULL) {
+                        list_insert_head(path, start_grafo->key);
+                        start_grafo = start_grafo->prev;
                     }
                     print_list_backwards(path->tail);
                 }
@@ -941,29 +806,17 @@ int main() {
                 free(path);
                 free(temp);
             }
-            */
+
+/*             for(int w = 0; w < nodi_utili_len; w++) {
+                printf("%d ", nodi_utili[w]);
+            } printf("\n"); */
+            
+            free(nodi_utili);
         }
 
         if(dataret != 0) {
             printf("Errore\n");
         } 
-    }
-    int w;
-    int prev = -1;
-    for(w=0;w<HASH_SIZE;w++) {
-        if(GRAPH->items[w] != NULL && GRAPH->items[w]->key > 0) {
-            prev = GRAPH->items[w]->key;
-            break;
-        }
-    }
-    for(int e=w+1; e< HASH_SIZE; e++) {
-        if(GRAPH->items[e] != NULL && prev > GRAPH->items[e]->key && GRAPH->items[e]->key > 0) {
-            printf("%d:%d %d:%d\n",w, prev, e, GRAPH->items[e]->key );
-        }
-        if(GRAPH->items[e] != NULL && GRAPH->items[e]->key > 0) {
-            prev = GRAPH->items[e]->key;
-            w++;
-        }
     }
     return 0;
 }
