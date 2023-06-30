@@ -1,5 +1,6 @@
 #include<stdio.h>
 #include<stdlib.h>
+#include<string.h>
 #define COMMAND_LENGTH 1000000
 #define AGGIUNGI_AUTO '1'
 #define ROTTAMA_AUTO '2'
@@ -460,18 +461,10 @@ char string_compare(char a[], char b[], int len) {
     return '1';
 }
 
-int string_len(char a[]) {
-    int i=0;
-    while(a[i] != '\0') {
-        i++;
-    }
-    return i+1;
-}
-
 int update_graph(grafo_t* GRAPH, char command_text[], char command, int command_len) {
     int i, j, k = 0, count = 0;
     char station_distance_str[10], command_number_str[10];
-    int len = string_len(command_text);
+    int len = strlen(command_text) + 1;
     
     for(i = command_len; i < len && command_text[i] != ' '; i++) {
         station_distance_str[count] = command_text[i];
@@ -716,7 +709,7 @@ int main() {
         }
         else if(string_compare(command, "pianifica-percorso", 17) == '1') {
             char start_str[30], end_str[30];
-            int len = string_len(command), i, j=0, k, l=0;
+            int len = strlen(command)+1, i, j=0, k, l=0;
             for(i = 19; i<len && command[i] != ' '; i++) {
                 start_str[j] = command[i];
                 j++;
@@ -820,11 +813,6 @@ int main() {
                 free(path);
                 free(temp);
             }
-
-/*             for(int w = 0; w < nodi_utili_len; w++) {
-                printf("%d ", nodi_utili[w]);
-            } printf("\n"); */
-            
             free(nodi_utili);
         }
 
