@@ -1,7 +1,6 @@
 utils
 main
 open
-rb.c
 rb
 test
 test.c

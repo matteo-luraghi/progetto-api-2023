@@ -537,6 +537,8 @@ void BFS(grafo_t* GRAPH, int* nodi, int len) {
     int reachable_tail = 0;
     
     while(queue->head != NULL) {
+        //printf("Queue: ");
+        //print_list(queue->head);
         nodo_lista_t* curr_lista = list_remove_tail(queue);
         if(curr_lista != NULL) {
             nodo_grafo_t* curr_grafo = graph_search(GRAPH, curr_lista->el);
@@ -589,6 +591,8 @@ void BFS_backwards(grafo_t* GRAPH, int* nodi, int len) {
     int reachable_tail = 0;
 
     while(queue->head != NULL) {
+        //printf("Queue: ");
+        //print_list(queue->head);
         nodo_lista_t* curr_lista = list_remove_tail(queue);
         if(curr_lista != NULL) {
             nodo_grafo_t* curr_grafo = graph_search(GRAPH, curr_lista->el);

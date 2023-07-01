@@ -1,24 +1,18 @@
 import random
 
 count = 0
-x = 0
-command = ''
 text = ''
-added = []
-added.append(12)
-
-while(count < 60000):
-    if(len(added) == 0 or random.randint(0,100) <= 50):
-        x = random.randint(1, 2147483647)
-        command = 'aggiungi'    
-        added.append(x)
+items = 0
+while(count < 90000000):
+    x = random.randint(1, 100000)
+    if(random.randint(1,100) <= 80 or items == 0):
+        text += f'enqueue {x}\n'
+        items += 1
     else:
-        x = added.pop()
-        command = 'rimuovi'
-
-    text += f"{command} {x}\n"
-    count += 1
-
-text += "exit 123\n"
+        text += f'dequeue {x}\n'
+        items -= 1
+    count+=1
 with open("in.txt", 'w') as f:
     f.write(text)
+
+print(items)
