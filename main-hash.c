@@ -6,8 +6,9 @@
 #define ROTTAMA_AUTO '2'
 #define AGGIUNGI_STAZIONE '3'
 #define DEMOLISCI_STAZIONE '4'
-#define HASH_SIZE 60000
-#define HASH_MOD 59989
+#define HASH_SIZE 120000
+#define HASH_MOD 119999
+#define ARRAY_DIM 60000
 
 typedef struct nodo_lista {
     int el;
@@ -528,20 +529,20 @@ void BFS(grafo_t* GRAPH, int* nodi, int len) {
     nodo_grafo_t* start = graph_search(GRAPH, nodi[0]);
     start->visited = 'G';
     
-    lista_t* queue = malloc(sizeof(lista_t));
-    queue->head = NULL;
-    queue->tail = NULL;
-    list_insert_head(queue, nodi[0]);
+    int* queue = calloc(ARRAY_DIM, sizeof(int));
+    int queue_head = ARRAY_DIM/2;
+    int queue_tail = ARRAY_DIM/2;
+    queue[queue_head] = nodi[0];
+    int queue_len = 1;
 
-    int reachable[HASH_SIZE];
+    int reachable[ARRAY_DIM];
     int reachable_tail = 0;
     
-    while(queue->head != NULL) {
+    while(queue_len > 0) {
         //printf("Queue: ");
         //print_list(queue->head);
-        nodo_lista_t* curr_lista = list_remove_tail(queue);
-        if(curr_lista != NULL) {
-            nodo_grafo_t* curr_grafo = graph_search(GRAPH, curr_lista->el);
+        if(queue[queue_tail] != 0) {
+            nodo_grafo_t* curr_grafo = graph_search(GRAPH, queue[queue_tail]);
 
             //find reachable
             reachable_tail = 0;
@@ -559,9 +560,14 @@ void BFS(grafo_t* GRAPH, int* nodi, int len) {
                 if(reachable[reachable_tail] > nodi[0] && reachable[reachable_tail] <= nodi[len-1]) {
                     nodo_grafo_t* v_grafo = graph_search(GRAPH, reachable[reachable_tail]);
                     if(v_grafo->visited == 'W') {
-                        v_grafo->visited = 'G';
+                        v_grafo->visited = 'B';
                         v_grafo->prev = curr_grafo;
-                        list_insert_head(queue, reachable[reachable_tail]);
+                        queue_head--;
+                        if(queue_head < 0) {
+                            queue_head = ARRAY_DIM - 1;
+                        }
+                        queue[queue_head] = reachable[reachable_tail];
+                        queue_len++;
                     }
                     if(reachable[reachable_tail] == nodi[len-1]) {
                         break;
@@ -574,6 +580,12 @@ void BFS(grafo_t* GRAPH, int* nodi, int len) {
                 break;
             }
         }
+        queue[queue_tail] = 0;
+        queue_tail--;
+        if(queue_tail < 0) {
+            queue_tail = ARRAY_DIM - 1;
+        }
+        queue_len--;
     }
 }
 
@@ -582,20 +594,20 @@ void BFS_backwards(grafo_t* GRAPH, int* nodi, int len) {
     nodo_grafo_t* end = graph_search(GRAPH, nodi[0]);
     end->visited = 'G';
     
-    lista_t* queue = malloc(sizeof(lista_t));
-    queue->head = NULL;
-    queue->tail = NULL;
-    list_insert_head(queue, nodi[0]);
+    int* queue = calloc(ARRAY_DIM, sizeof(int));
+    int queue_head = ARRAY_DIM/2;
+    int queue_tail = ARRAY_DIM/2;
+    queue[queue_head] = nodi[0];
+    int queue_len = 1;
 
-    int reachable[HASH_SIZE];
+    int reachable[ARRAY_DIM];
     int reachable_tail = 0;
 
-    while(queue->head != NULL) {
+    while(queue_len > 0) {
         //printf("Queue: ");
         //print_list(queue->head);
-        nodo_lista_t* curr_lista = list_remove_tail(queue);
-        if(curr_lista != NULL) {
-            nodo_grafo_t* curr_grafo = graph_search(GRAPH, curr_lista->el);
+        if(queue[queue_tail] != 0) {
+            nodo_grafo_t* curr_grafo = graph_search(GRAPH, queue[queue_tail]);
 
             //find reachable
             reachable_tail = 0;
@@ -614,9 +626,14 @@ void BFS_backwards(grafo_t* GRAPH, int* nodi, int len) {
                 if(reachable[reachable_tail] > nodi[0] && reachable[reachable_tail] <= nodi[len-1]) {
                     nodo_grafo_t* v_grafo = graph_search(GRAPH, reachable[reachable_tail]);
                     if(v_grafo->visited == 'W') {
-                        v_grafo->visited = 'G';
+                        v_grafo->visited = 'B';
                         v_grafo->prev = curr_grafo;
-                        list_insert_head(queue, reachable[reachable_tail]);
+                        queue_head--;
+                        if(queue_head < 0) {
+                            queue_head = ARRAY_DIM - 1;
+                        }
+                        queue[queue_head] = reachable[reachable_tail];
+                        queue_len++;
                     }
                     if(reachable[reachable_tail] == nodi[len-1]) {
                         break;
@@ -629,8 +646,13 @@ void BFS_backwards(grafo_t* GRAPH, int* nodi, int len) {
             if(curr_grafo->key == nodi[len-1]) {
                 break;
             }
-            curr_grafo->visited = 'B';
         }
+        queue[queue_tail] = 0;
+        queue_tail--;
+        if(queue_tail < 0) {
+            queue_tail = ARRAY_DIM - 1;
+        }
+        queue_len--;
     }
 }
 
