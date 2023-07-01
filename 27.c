@@ -534,7 +534,7 @@ void BFS(grafo_t* GRAPH, int* nodi, int len) {
     queue->tail = NULL;
     list_insert_head(queue, nodi[0]);
 
-    int reachable[ARRAY];
+    int reachable[ARRAY_DIM];
     int reachable_tail = 0;
     
     while(queue->head != NULL) {
@@ -586,7 +586,7 @@ void BFS_backwards(grafo_t* GRAPH, int* nodi, int len) {
     queue->tail = NULL;
     list_insert_head(queue, nodi[0]);
 
-    int reachable[ARRAY];
+    int reachable[ARRAY_DIM];
     int reachable_tail = 0;
 
     while(queue->head != NULL) {
