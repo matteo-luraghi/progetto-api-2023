@@ -94,16 +94,28 @@ nodo_lista_t* list_remove_tail(lista_t* l) {
     return tail;
 }
 
-void insertion_sort(int* A, int len) {
-    for(int j = 1; j < len; j++) {
-        int key = A[j];
-        int i = j - 1;
-        while(i > 0 && A[i] > key) {
-            A[i + 1] = A[i];
-            i--;
+void quick_sort(int* A, int p, int r) {
+    if(p < r) {
+        int x = A[r];
+        int i = p - 1;
+        int temp;
+        for(int j=p; j<r;j++) {
+            if(A[j] <= x) {
+                i++;
+                temp = A[i];
+                A[i] = A[j];
+                A[j] = temp;
+            }
         }
-        A[i + 1] = key;
-    } 
+        temp = A[i+1];
+        A[i+1] = A[r];
+        A[r] = temp;
+
+        int q = i+1;
+
+        quick_sort(A, p, q-1);
+        quick_sort(A, q+1, r);
+    }
 }
 
 void print_list(nodo_lista_t* x) {
@@ -131,7 +143,7 @@ void print_list_backwards(nodo_lista_t* x) {
 }
 
 nodo_albero_t* tree_search(stazione_t* T, nodo_albero_t* x, int data) {
-    if(x == T->nil || data == x->data) {
+   if(x == T->nil || data == x->data) {
         return x;
     }
     if(data < x->data) {
@@ -689,7 +701,14 @@ int main() {
                 nodi_utili_len++;
             }
 
-            insertion_sort(nodi_utili, nodi_utili_len);
+            int nodi_temp = nodi_utili[0];
+            for(int h=1; h<=nodi_utili_len;h++) {
+                if(nodi_temp > nodi_utili[h]) {
+                    quick_sort(nodi_utili, 0, nodi_utili_len-1);
+                    break;
+                }
+                nodi_temp = nodi_utili[h];
+            }
 
             for(int q = 0; q < nodi_utili_len; q++) {
                 nodo_grafo_t* curr = graph_search(GRAPH, nodi_utili[q]);
