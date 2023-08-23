@@ -552,7 +552,13 @@ void BFS(grafo_t* GRAPH, int* nodi, int len) {
     while(queue->head != NULL) {
         nodo_lista_t* curr_lista = list_remove_tail(queue);
         if(curr_lista != NULL) {
-            nodo_grafo_t* curr_grafo = graph_search(GRAPH, curr_lista->el);
+            nodo_grafo_t* curr_grafo;
+            if(curr_lista->el == nodi[0]) {
+                curr_grafo = start;
+            }
+            else {
+                curr_grafo = graph_search(GRAPH, curr_lista->el);
+            }
 
             //find reachable
             reachable_tail = 0;
@@ -570,7 +576,7 @@ void BFS(grafo_t* GRAPH, int* nodi, int len) {
                 if(reachable[reachable_tail] > nodi[0] && reachable[reachable_tail] <= nodi[len-1]) {
                     nodo_grafo_t* v_grafo = graph_search(GRAPH, reachable[reachable_tail]);
                     if(v_grafo->visited == 'W') {
-                        v_grafo->visited = 'G';
+                        v_grafo->visited = 'B';
                         v_grafo->prev = curr_grafo;
                         list_insert_head(queue, reachable[reachable_tail]);
                     }
@@ -604,7 +610,13 @@ void BFS_backwards(grafo_t* GRAPH, int* nodi, int len) {
     while(queue->head != NULL) {
         nodo_lista_t* curr_lista = list_remove_tail(queue);
         if(curr_lista != NULL) {
-            nodo_grafo_t* curr_grafo = graph_search(GRAPH, curr_lista->el);
+            nodo_grafo_t* curr_grafo;
+            if(curr_lista->el == nodi[0]) {
+                curr_grafo = end;
+            }
+            else {
+                curr_grafo = graph_search(GRAPH, curr_lista->el);
+            }
 
             //find reachable
             reachable_tail = 0;
@@ -623,7 +635,7 @@ void BFS_backwards(grafo_t* GRAPH, int* nodi, int len) {
                 if(reachable[reachable_tail] > nodi[0] && reachable[reachable_tail] <= nodi[len-1]) {
                     nodo_grafo_t* v_grafo = graph_search(GRAPH, reachable[reachable_tail]);
                     if(v_grafo->visited == 'W') {
-                        v_grafo->visited = 'G';
+                        v_grafo->visited = 'B';
                         v_grafo->prev = curr_grafo;
                         list_insert_head(queue, reachable[reachable_tail]);
                     }
@@ -638,7 +650,6 @@ void BFS_backwards(grafo_t* GRAPH, int* nodi, int len) {
             if(curr_grafo->key == nodi[len-1]) {
                 break;
             }
-            curr_grafo->visited = 'B';
         }
     }
 }

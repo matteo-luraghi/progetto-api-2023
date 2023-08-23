@@ -1,0 +1,222 @@
+#1
+Dritti: 0 Backwards: 2
+#2
+Dritti: 2 Backwards: 0
+#3
+Dritti: 0 Backwards: 2
+#4
+Dritti: 0 Backwards: 2
+#5
+Dritti: 1 Backwards: 1
+#6
+Dritti: 1 Backwards: 2
+#7
+Dritti: 1 Backwards: 2
+#8
+Dritti: 1 Backwards: 0
+#9
+Dritti: 4 Backwards: 0
+#10
+Dritti: 2 Backwards: 3
+#11
+Dritti: 2 Backwards: 2
+#12
+Dritti: 1 Backwards: 7
+#13
+Dritti: 2 Backwards: 1
+#14
+Dritti: 3 Backwards: 2
+#15
+Dritti: 0 Backwards: 5
+#16
+Dritti: 4 Backwards: 3
+#17
+Dritti: 1 Backwards: 1
+#18
+Dritti: 2 Backwards: 1
+#19
+Dritti: 1 Backwards: 2
+#20
+Dritti: 4 Backwards: 2
+#21
+Dritti: 5 Backwards: 1
+#22
+Dritti: 6 Backwards: 0
+#23
+Dritti: 5 Backwards: 4
+#24
+Dritti: 4 Backwards: 2
+#25
+Dritti: 0 Backwards: 4
+#26
+Dritti: 1 Backwards: 2
+#27
+Dritti: 5 Backwards: 0
+#28
+Dritti: 3 Backwards: 1
+#29
+Dritti: 4 Backwards: 2
+#30
+Dritti: 5 Backwards: 4
+#31
+Dritti: 3 Backwards: 4
+#32
+Dritti: 7 Backwards: 7
+#33
+Dritti: 3 Backwards: 5
+#34
+Dritti: 4 Backwards: 5
+#35
+Dritti: 5 Backwards: 4
+#36
+Dritti: 4 Backwards: 4
+#37
+Dritti: 2 Backwards: 4
+#38
+Dritti: 4 Backwards: 5
+#39
+Dritti: 9 Backwards: 9
+#40
+Dritti: 6 Backwards: 6
+#41
+Dritti: 5 Backwards: 8
+#42
+Dritti: 1 Backwards: 6
+#43
+Dritti: 7 Backwards: 6
+#44
+Dritti: 7 Backwards: 9
+#45
+Dritti: 6 Backwards: 3
+#46
+Dritti: 5 Backwards: 7
+#47
+Dritti: 6 Backwards: 2
+#48
+Dritti: 8 Backwards: 5
+#49
+Dritti: 4 Backwards: 6
+#50
+Dritti: 3 Backwards: 4
+#51
+Dritti: 1 Backwards: 5
+#52
+Dritti: 10 Backwards: 3
+#53
+Dritti: 6 Backwards: 6
+#54
+Dritti: 6 Backwards: 5
+#55
+Dritti: 5 Backwards: 4
+#56
+Dritti: 7 Backwards: 7
+#57
+Dritti: 10 Backwards: 9
+#58
+Dritti: 10 Backwards: 6
+#59
+Dritti: 10 Backwards: 5
+#60
+Dritti: 5 Backwards: 7
+#61
+Dritti: 11 Backwards: 11
+#62
+Dritti: 5 Backwards: 11
+#63
+Dritti: 6 Backwards: 11
+#64
+Dritti: 10 Backwards: 9
+#65
+Dritti: 8 Backwards: 8
+#66
+Dritti: 8 Backwards: 6
+#67
+Dritti: 4 Backwards: 10
+#68
+Dritti: 3 Backwards: 6
+#69
+Dritti: 9 Backwards: 6
+#70
+Dritti: 3 Backwards: 5
+#71
+Dritti: 12 Backwards: 8
+#72
+Dritti: 11 Backwards: 6
+#73
+Dritti: 11 Backwards: 8
+#74
+Dritti: 8 Backwards: 7
+#75
+Dritti: 5 Backwards: 8
+#76
+Dritti: 10 Backwards: 9
+#77
+Dritti: 5 Backwards: 10
+#78
+Dritti: 10 Backwards: 13
+#79
+Dritti: 13 Backwards: 5
+#80
+Dritti: 13 Backwards: 7
+#81
+Dritti: 11 Backwards: 7
+#82
+Dritti: 8 Backwards: 10
+#83
+Dritti: 7 Backwards: 8
+#84
+Dritti: 14 Backwards: 7
+#85
+Dritti: 14 Backwards: 7
+#86
+Dritti: 6 Backwards: 7
+#87
+Dritti: 13 Backwards: 8
+#88
+Dritti: 7 Backwards: 5
+#89
+Dritti: 9 Backwards: 6
+#90
+Dritti: 8 Backwards: 3
+#91
+Dritti: 8 Backwards: 9
+#92
+Dritti: 11 Backwards: 7
+#93
+Dritti: 12 Backwards: 10
+#94
+Dritti: 11 Backwards: 7
+#95
+Dritti: 10 Backwards: 13
+#96
+Dritti: 7 Backwards: 8
+#97
+Dritti: 11 Backwards: 10
+#98
+Dritti: 9 Backwards: 9
+#99
+Dritti: 15 Backwards: 10
+#100
+Dritti: 18 Backwards: 6
+#101
+Dritti: 16 Backwards: 11
+#102
+Dritti: 13 Backwards: 15
+#103
+Dritti: 12 Backwards: 6
+#104
+Dritti: 13 Backwards: 19
+#105
+Dritti: 15 Backwards: 8
+#106
+Dritti: 10 Backwards: 11
+#107
+Dritti: 13 Backwards: 14
+#108
+Dritti: 6 Backwards: 9
+#109
+Dritti: 6 Backwards: 18
+#110
+Dritti: 9 Backwards: 15
+#111
+Dritti: 13 Backwards: 17
