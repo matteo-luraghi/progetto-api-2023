@@ -1,12 +1,12 @@
 import subprocess
 import os
 l=[]
-for i in range(1,112):
+for i in range(1,101):
     print("Running on file:",i)
     s="./open/open_"+str(i)+".txt"
     input=open(s,"r")
     output=open(f"./out/output{i}.txt","w")
-    proc=subprocess.run("./30",stdin=input,stdout=output)
+    proc=subprocess.run("./test",stdin=input,stdout=output)
     output.close()
 
     s="./open/open_"+str(i)+".output.txt"
@@ -16,3 +16,4 @@ for i in range(1,112):
     #os.system("clear")
 
 print(l)
+print(len(l))
