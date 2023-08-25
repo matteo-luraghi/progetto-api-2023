@@ -583,19 +583,6 @@ void BFS_backwards(grafo_t* GRAPH, int* nodi, int len) {
     }
 }
 
-char get_command(char command[]) {
-    if(command[0] == 'r') {
-        return ROTTAMA_AUTO;
-    }
-    if(command[0] == 'd') {
-        return DEMOLISCI_STAZIONE;
-    }
-    if(command[9] == 's') {
-        return AGGIUNGI_STAZIONE;
-    }
-    return AGGIUNGI_AUTO;
-}
-
 int main() {
     grafo_t* GRAPH = malloc(sizeof(grafo_t));
     GRAPH->items = malloc(HASH_SIZE*(sizeof(nodo_grafo_t)));
@@ -614,8 +601,9 @@ int main() {
             command_number_str[clean] = 0;
         }
                
-        int i = 0, j  =0;
+        int i = 0, j = 0;
         
+        //reading the command
         if(command[0] == 'r') {
             command_text = ROTTAMA_AUTO;
             i = 13;
@@ -637,6 +625,7 @@ int main() {
             i = 14;
         }
 
+        //reading the station distance / start station
         while(command[i] != ' ' && command[i] != '\n' && command[i] != '\0') {
             station_distance_str[j] = command[i];
             i++;
@@ -650,6 +639,7 @@ int main() {
         if(command[i] != '\n' && command[i] != '\0') {
             i++;
         }
+        //reading the number of cars to add / car to add or remove / end station
         while(command[i] != ' ' && command[i] != '\n' && command[i] != '\0') {
             command_number_str[j] = command[i];
             i++;
@@ -675,6 +665,7 @@ int main() {
                 int count = 0;
                 char data_str[15];
                 
+                //reading all the cars to add to the new station
                 while(count < command_number) {
                     for(int cleaner=0;cleaner<15; cleaner++) {
                         data_str[cleaner] = 0;
