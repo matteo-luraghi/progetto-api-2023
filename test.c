@@ -1,3 +1,6 @@
+//try to make tree insert quicker
+//then look at the BFS_backwards
+
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
@@ -116,6 +119,45 @@ void quick_sort(int* A, int p, int r) {
 
         quick_sort(A, p, q-1);
         quick_sort(A, q+1, r);
+    }
+}
+
+void max_heapify(int* A, int i, int heap_size) {
+    int l = 2*i;
+    int r = (2*i)+1;
+    int max;
+    if(l<=heap_size && A[l] > A[i]) {
+        max = l;
+    }
+    else {
+        max = i;
+    }
+    if(r<=heap_size && A[r] > A[max]) {
+        max = r;
+    }
+    if(max != i) {
+        int temp = A[i];
+        A[i] = A[max];
+        A[max] = temp;
+        max_heapify(A, max, heap_size);
+    }
+}
+
+void build_max_heap(int* A, int len) {
+    for(int i = len/2; i>=0; i--) {
+        max_heapify(A, i, len);
+    }
+}
+
+void heapsort(int* A, int len) {
+    build_max_heap(A,len);
+    int heap_size = len;
+    for(int i=len; i>=1; i--) {
+        int temp = A[0];
+        A[0] = A[i];
+        A[i] = temp;
+        heap_size--;
+        max_heapify(A, 0, heap_size);
     }
 }
 
@@ -755,6 +797,7 @@ int main() {
             for(int h=1; h<=nodi_utili_len;h++) {
                 if(nodi_temp > nodi_utili[h]) {
                     quick_sort(nodi_utili, 0, nodi_utili_len-1);
+                    //heapsort(nodi_utili, nodi_utili_len-1);
                     break;
                 }
                 nodi_temp = nodi_utili[h];
