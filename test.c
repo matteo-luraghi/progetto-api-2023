@@ -468,7 +468,7 @@ nodo_grafo_t* graph_delete(grafo_t* GRAPH, int key) {
 void BFS(grafo_t* GRAPH, int* nodi, int len) {
     int i;
     nodo_grafo_t* start = graph_search(GRAPH, nodi[0]);
-    start->visited = 'G';
+    start->visited = 'B';
     
     lista_t* queue = malloc(sizeof(lista_t));
     queue->head = NULL;
@@ -526,7 +526,7 @@ void BFS(grafo_t* GRAPH, int* nodi, int len) {
 void BFS_backwards(grafo_t* GRAPH, int* nodi, int len) {
     int i;
     nodo_grafo_t* end = graph_search(GRAPH, nodi[0]);
-    end->visited = 'G';
+    end->visited = 'B';
     
     lista_t* queue = malloc(sizeof(lista_t));
     queue->head = NULL;
