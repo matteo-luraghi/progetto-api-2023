@@ -3,7 +3,6 @@ main
 open
 rb
 test
-test.c
 hash
 in.txt
 out.txt
