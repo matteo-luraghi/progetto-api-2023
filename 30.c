@@ -1,3 +1,6 @@
+//try to make tree insert quicker
+//then look at the BFS_backwards
+
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
@@ -6,6 +9,7 @@
 #define ROTTAMA_AUTO '2'
 #define AGGIUNGI_STAZIONE '3'
 #define DEMOLISCI_STAZIONE '4'
+#define PIANIFICA_PERCORSO '5'
 #define HASH_SIZE 120000
 #define HASH_MOD 119999
 #define ARRAY_DIM 60000
@@ -118,6 +122,45 @@ void quick_sort(int* A, int p, int r) {
     }
 }
 
+void max_heapify(int* A, int i, int heap_size) {
+    int l = 2*i;
+    int r = (2*i)+1;
+    int max;
+    if(l<=heap_size && A[l] > A[i]) {
+        max = l;
+    }
+    else {
+        max = i;
+    }
+    if(r<=heap_size && A[r] > A[max]) {
+        max = r;
+    }
+    if(max != i) {
+        int temp = A[i];
+        A[i] = A[max];
+        A[max] = temp;
+        max_heapify(A, max, heap_size);
+    }
+}
+
+void build_max_heap(int* A, int len) {
+    for(int i = len/2; i>=0; i--) {
+        max_heapify(A, i, len);
+    }
+}
+
+void heapsort(int* A, int len) {
+    build_max_heap(A,len);
+    int heap_size = len;
+    for(int i=len; i>=1; i--) {
+        int temp = A[0];
+        A[0] = A[i];
+        A[i] = temp;
+        heap_size--;
+        max_heapify(A, 0, heap_size);
+    }
+}
+
 void print_list(nodo_lista_t* x) {
     while (x != NULL) {
         if(x->next != NULL) {
@@ -143,15 +186,15 @@ void print_list_backwards(nodo_lista_t* x) {
 }
 
 nodo_albero_t* tree_search(stazione_t* T, nodo_albero_t* x, int data) {
-   if(x == T->nil || data == x->data) {
-        return x;
+    while(x != T->nil && data != x->data) {
+        if(data < x->data) {
+            x = x->left;
+        }
+        else {
+            x = x->right;
+        }
     }
-    if(data < x->data) {
-        return tree_search(T, x->left, data);
-    }
-    else {
-        return tree_search(T, x->right, data);
-    }
+    return x;
 }
 
 nodo_albero_t* tree_min(stazione_t* T, nodo_albero_t* x) {
@@ -412,12 +455,8 @@ nodo_albero_t* rb_delete(stazione_t* T, int data) {
     return y;
 }
 
-int hash_function(int key) {
-    return key % HASH_MOD;
-}
-
 nodo_grafo_t* graph_search(grafo_t* GRAPH, int key) {
-    int index = hash_function(key);
+    int index = key % HASH_MOD;
     while(GRAPH->items[index] != NULL) {
         if(GRAPH->items[index]->key == key) {
             return GRAPH->items[index];
@@ -440,7 +479,7 @@ void graph_insert(grafo_t* GRAPH, int key) {
     item->key = key;
     item->stazione = stazione;
 
-    int index = hash_function(key);
+    int index = key % HASH_MOD;
     
     while(GRAPH->items[index] != NULL && GRAPH->items[index]->key != -1) {
         index++;
@@ -450,7 +489,7 @@ void graph_insert(grafo_t* GRAPH, int key) {
 }
 
 nodo_grafo_t* graph_delete(grafo_t* GRAPH, int key) {
-    int index = hash_function(key);
+    int index = key % HASH_MOD;
     while(GRAPH->items[index] != NULL) {
         if(GRAPH->items[index]->key == key) {
             nodo_grafo_t* temp = GRAPH->items[index];
@@ -464,82 +503,10 @@ nodo_grafo_t* graph_delete(grafo_t* GRAPH, int key) {
     return NULL;
 }
 
-int update_graph(grafo_t* GRAPH, char command) {
-    int station_distance;
-    if(scanf("%d", &station_distance)<=0) {
-    }
-
-    if(command == AGGIUNGI_STAZIONE) {
-        if(graph_search(GRAPH, station_distance) == NULL) {
-            graph_insert(GRAPH, station_distance);
-        }
-        else {
-            printf("non aggiunta\n");
-            return 0;
-        }
-    }
-    
-    else if(command == DEMOLISCI_STAZIONE) {    
-        nodo_grafo_t* deleted = graph_delete(GRAPH, station_distance);
-        if(deleted != NULL) {
-            free(deleted->stazione);
-            //free(deleted);
-            printf("demolita\n");
-        }
-        else {
-            printf("non demolita\n");
-        }
-        return 0;
-    } 
-
-    int command_number;
-    if(scanf("%d", &command_number)<=0) {
-    }
-
-    if(command == ROTTAMA_AUTO) {
-        nodo_grafo_t* current_station = graph_search(GRAPH, station_distance);
-        if(current_station != NULL) {
-            if(tree_search(current_station->stazione, current_station->stazione->root, command_number) != current_station->stazione->nil) {
-                nodo_albero_t* deleted_auto = rb_delete(current_station->stazione, command_number);
-                free(deleted_auto);
-                printf("rottamata\n");
-                return 0;
-            }    
-        }
-        printf("non rottamata\n");
-        return 0;
-    }
-
-    else if(command == AGGIUNGI_AUTO) {
-        nodo_grafo_t* current_station = graph_search(GRAPH, station_distance);
-        if(current_station != NULL) {
-            tree_insert(current_station->stazione, command_number);
-            printf("aggiunta\n");
-        }
-        else {
-            printf("non aggiunta\n");
-        }
-        return 0;
-    }
-
-    else if(command == AGGIUNGI_STAZIONE) {
-        nodo_grafo_t* current_station = graph_search(GRAPH, station_distance);
-        int data;
-        for(int i = 0; i < command_number; i++) {
-            if(scanf("%d", &data)<=0) {
-            }
-            tree_insert(current_station->stazione, data);
-        }
-        printf("aggiunta\n");
-        return 0;
-    }
-    return 1;
-}
-
 void BFS(grafo_t* GRAPH, int* nodi, int len) {
     int i;
     nodo_grafo_t* start = graph_search(GRAPH, nodi[0]);
-    start->visited = 'G';
+    start->visited = 'B';
     
     lista_t* queue = malloc(sizeof(lista_t));
     queue->head = NULL;
@@ -548,11 +515,14 @@ void BFS(grafo_t* GRAPH, int* nodi, int len) {
 
     int reachable[ARRAY_DIM];
     int reachable_tail = 0;
+
+    nodo_lista_t* curr_lista;
+    nodo_grafo_t* curr_grafo;
+    nodo_grafo_t* v_grafo;
     
     while(queue->head != NULL) {
-        nodo_lista_t* curr_lista = list_remove_tail(queue);
+        curr_lista = list_remove_tail(queue);
         if(curr_lista != NULL) {
-            nodo_grafo_t* curr_grafo;
             if(curr_lista->el == nodi[0]) {
                 curr_grafo = start;
             }
@@ -574,22 +544,26 @@ void BFS(grafo_t* GRAPH, int* nodi, int len) {
 
             while(reachable_tail != -1) {
                 if(reachable[reachable_tail] > nodi[0] && reachable[reachable_tail] <= nodi[len-1]) {
-                    nodo_grafo_t* v_grafo = graph_search(GRAPH, reachable[reachable_tail]);
+                    v_grafo = graph_search(GRAPH, reachable[reachable_tail]);
+                    if(reachable[reachable_tail] == nodi[len-1]) {
+                        v_grafo->prev = curr_grafo;
+                        return;
+                    }
                     if(v_grafo->visited == 'W') {
                         v_grafo->visited = 'B';
                         v_grafo->prev = curr_grafo;
                         list_insert_head(queue, reachable[reachable_tail]);
                     }
-                    if(reachable[reachable_tail] == nodi[len-1]) {
-                        break;
-                    }
+                    
                 }
                 reachable[reachable_tail] = 0;
                 reachable_tail--;
             }
+/*
             if(curr_grafo->key == nodi[len-1]) {
                 break;
             }
+*/
         }
     }
 }
@@ -597,7 +571,7 @@ void BFS(grafo_t* GRAPH, int* nodi, int len) {
 void BFS_backwards(grafo_t* GRAPH, int* nodi, int len) {
     int i;
     nodo_grafo_t* end = graph_search(GRAPH, nodi[0]);
-    end->visited = 'G';
+    end->visited = 'B';
     
     lista_t* queue = malloc(sizeof(lista_t));
     queue->head = NULL;
@@ -607,10 +581,14 @@ void BFS_backwards(grafo_t* GRAPH, int* nodi, int len) {
     int reachable[ARRAY_DIM];
     int reachable_tail = 0;
 
+    nodo_lista_t* curr_lista;
+    nodo_grafo_t* curr_grafo;
+    nodo_grafo_t* i_grafo;
+    nodo_grafo_t* v_grafo;
+
     while(queue->head != NULL) {
-        nodo_lista_t* curr_lista = list_remove_tail(queue);
+        curr_lista = list_remove_tail(queue);
         if(curr_lista != NULL) {
-            nodo_grafo_t* curr_grafo;
             if(curr_lista->el == nodi[0]) {
                 curr_grafo = end;
             }
@@ -624,62 +602,179 @@ void BFS_backwards(grafo_t* GRAPH, int* nodi, int len) {
                 if(nodi[i] == curr_grafo->key) {
                     break;
                 }
-                nodo_grafo_t* i_grafo = graph_search(GRAPH, nodi[i]);
+                i_grafo = graph_search(GRAPH, nodi[i]);
                 if(nodi[i] > curr_grafo->key && nodi[i] - curr_grafo->key <= i_grafo->stazione->max){
                     reachable[reachable_tail] = nodi[i];
-                    reachable_tail++;
+                    reachable_tail++;    
                 }
             }
 
             while(reachable_tail != -1) {
                 if(reachable[reachable_tail] > nodi[0] && reachable[reachable_tail] <= nodi[len-1]) {
-                    nodo_grafo_t* v_grafo = graph_search(GRAPH, reachable[reachable_tail]);
+                    v_grafo = graph_search(GRAPH, reachable[reachable_tail]);
+                    if(reachable[reachable_tail] == nodi[len-1]) {
+                        v_grafo->prev = curr_grafo;
+                        return;
+                    }
                     if(v_grafo->visited == 'W') {
                         v_grafo->visited = 'B';
                         v_grafo->prev = curr_grafo;
                         list_insert_head(queue, reachable[reachable_tail]);
                     }
-                    if(reachable[reachable_tail] == nodi[len-1]) {
-                        break;
-                    }
+
                 }
                 reachable[reachable_tail] = 0;
                 reachable_tail--;
             }
-
+/*
             if(curr_grafo->key == nodi[len-1]) {
                 break;
             }
+*/
         }
     }
 }
 
 int main() {
     grafo_t* GRAPH = malloc(sizeof(grafo_t));
+    nodo_grafo_t* curr;
+    char command[COMMAND_LENGTH];
+    char station_distance_str[15];
+    char command_number_str[15];
+    char data_str[15];
+    char command_text;
+    int data, i, j, q, station_distance, command_number, count, clean;
+
     GRAPH->items = malloc(HASH_SIZE*(sizeof(nodo_grafo_t)));
-    for(int p=0; p<HASH_SIZE;p++) {
-        GRAPH->items[p] = NULL;
+    for(i=0; i<HASH_SIZE;i++) {
+        GRAPH->items[i] = NULL;
     }
 
-    char command[COMMAND_LENGTH];
-    while (scanf("%s", command) > 0) {
-        int dataret = 0;
-        if(strcmp(command, "aggiungi-auto")==0) {
-            dataret = update_graph(GRAPH, AGGIUNGI_AUTO);
+    while (fgets(command, COMMAND_LENGTH, stdin)!=NULL) {
+
+        for(clean = 0; clean < 15; clean++) {
+            station_distance_str[clean] = 0;
+            command_number_str[clean] = 0;
         }
-        else if(strcmp(command, "rottama-auto")==0) {
-            dataret = update_graph(GRAPH, ROTTAMA_AUTO);
+               
+        i = 0;
+        j = 0;
+        
+        //reading the command
+        if(command[0] == 'r') {
+            command_text = ROTTAMA_AUTO;
+            i = 13;
         }
-        else if(strcmp(command, "aggiungi-stazione")==0) {
-            dataret = update_graph(GRAPH, AGGIUNGI_STAZIONE);
+        else if(command[0] == 'd') {
+            command_text = DEMOLISCI_STAZIONE;
+            i = 19;
         }
-        else if(strcmp(command, "demolisci-stazione")==0) {
-            dataret = update_graph(GRAPH, DEMOLISCI_STAZIONE);
+        else if(command[0] == 'p') {
+            command_text = PIANIFICA_PERCORSO;
+            i = 19;
         }
-        else if(strcmp(command, "pianifica-percorso")==0) {
-            int start_num, end_num;           
-            if(scanf("%d %d", &start_num, &end_num)<=0) {
+        else if(command[9] == 's') {
+            command_text = AGGIUNGI_STAZIONE;
+            i = 18;
+        }
+        else {
+            command_text = AGGIUNGI_AUTO;
+            i = 14;
+        }
+
+        //reading the station distance / start station
+        while(command[i] != ' ' && command[i] != '\n') {
+            station_distance_str[j] = command[i];
+            i++;
+            j++;
+        }
+        station_distance_str[i] = '\0';
+        
+        station_distance = atoi(station_distance_str);
+ 
+        j = 0;
+        if(command[i] != '\n') {
+            i++;
+        }
+        //reading the number of cars to add / car to add or remove / end station
+        while(command[i] != ' ' && command[i] != '\n') {
+            command_number_str[j] = command[i];
+            i++;
+            j++;
+        }
+
+        command_number = atoi(command_number_str);
+
+        if(command_text == AGGIUNGI_AUTO) {
+            nodo_grafo_t* current_station = graph_search(GRAPH, station_distance);
+            if(current_station != NULL) {
+                tree_insert(current_station->stazione, command_number);
+                printf("aggiunta\n");
             }
+            else {
+                printf("non aggiunta\n");
+            }
+        } 
+        else if(command_text == AGGIUNGI_STAZIONE) {
+            if(graph_search(GRAPH, station_distance) == NULL) {
+                graph_insert(GRAPH, station_distance);
+                nodo_grafo_t* current_station = graph_search(GRAPH, station_distance);
+                count = 0;
+                
+                //reading all the cars to add to the new station
+                while(count < command_number) {
+                    for(clean=0;clean<15; clean++) {
+                        data_str[clean] = 0;
+                    }
+                    j = 0;
+                    i++;
+                    while(command[i] != ' ' && command[i] != '\n') {
+                        data_str[j] = command[i];
+                        i++;
+                        j++;
+                    }
+                    data = atoi(data_str);
+                    tree_insert(current_station->stazione, data);
+                    count++;
+                } 
+                printf("aggiunta\n");
+            }
+            else {
+                printf("non aggiunta\n");
+            }
+        } 
+        else if(command_text == ROTTAMA_AUTO) {
+            nodo_grafo_t* current_station = graph_search(GRAPH, station_distance);
+            if(current_station != NULL) {
+                nodo_albero_t* deleted_auto = rb_delete(current_station->stazione, command_number);
+                if(deleted_auto != current_station->stazione->nil) {
+                    free(deleted_auto);
+                    printf("rottamata\n");
+                }
+                else {
+                    printf("non rottamata\n");
+                }
+            }
+            else {
+                printf("non rottamata\n");
+            }
+        } 
+        else if(command_text == DEMOLISCI_STAZIONE) {
+            nodo_grafo_t* deleted = graph_delete(GRAPH, station_distance);
+            if(deleted != NULL) {
+                free(deleted->stazione);
+                printf("demolita\n");
+            }
+            else {
+                printf("non demolita\n");
+            }
+        } 
+
+        else { //pianifica percorso
+            int start_num, end_num;           
+
+            start_num = station_distance;
+            end_num = command_number;
 
             int* nodi_utili = malloc(sizeof(int)*HASH_SIZE);
             int nodi_utili_len = 0;
@@ -716,13 +811,14 @@ int main() {
             for(int h=1; h<=nodi_utili_len;h++) {
                 if(nodi_temp > nodi_utili[h]) {
                     quick_sort(nodi_utili, 0, nodi_utili_len-1);
+                    //heapsort(nodi_utili, nodi_utili_len-1);
                     break;
                 }
                 nodi_temp = nodi_utili[h];
             }
 
-            for(int q = 0; q < nodi_utili_len; q++) {
-                nodo_grafo_t* curr = graph_search(GRAPH, nodi_utili[q]);
+            for(q = 0; q < nodi_utili_len; q++) {
+                curr = graph_search(GRAPH, nodi_utili[q]);
                 curr->visited = 'W';
                 curr->prev = NULL;
             }
@@ -778,10 +874,7 @@ int main() {
                 free(temp);
             }
             free(nodi_utili);
-        }
-
-        if(dataret != 0) {
-            printf("Errore\n");
+            
         } 
     }
     return 0;
