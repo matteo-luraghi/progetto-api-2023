@@ -6,7 +6,7 @@ for i in range(1,101):
     s="./open/open_"+str(i)+".txt"
     input=open(s,"r")
     output=open(f"./out/output{i}.txt","w")
-    proc=subprocess.run("./test",stdin=input,stdout=output)
+    proc=subprocess.run("./30",stdin=input,stdout=output)
     output.close()
 
     s="./open/open_"+str(i)+".output.txt"
